@@ -1,0 +1,9 @@
+[
+  {
+    "adapter": "CodeLLDB",
+    "label": "debug_dominion",
+    "request": "launch",
+    "program": "build/dominion/dominion",
+    "build": "cmake_build_task",
+  },
+]
