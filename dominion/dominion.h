@@ -1,0 +1,304 @@
+#include <iostream>
+#include <memory>
+#include <sys/stat.h>
+#include <utility>
+#include <vector>
+#include <map>
+#include <random>
+#include <set>
+#include <gtest/gtest_prod.h> // 1. 프로덕션 헤더에 이 gtest 제품용 헤더를 추가합니다.
+
+class SupplyTest;
+
+enum class RetCode {
+    Success,
+    NoEnoughBuy,
+    NoEnoughCoin,
+    EmptyDeck,
+    EmptySupply,
+    EmptyHand,
+    EmptyDiscard,
+    EmptyDiscardAndDeck,
+    InvaildPlayer,
+    InvaildSupply,
+    InvaildState,
+};
+
+class BasicAbility {
+public:
+    enum class Ability {
+        None,
+        Action,
+        Cards,
+        Coin,
+        Buy,
+        Score,
+    };
+    BasicAbility(Ability ability, int amount) : ability_(ability), amount_(amount) {};
+    Ability getAbility() const;
+private:
+    Ability ability_ = Ability::None;
+    int amount_ = 0;
+};
+
+class UniqueAbility {
+public:
+    enum class Ability {
+        None,
+        Chapel,
+        Cellar,
+        Moneylender,
+        Workshop,
+        Merchant,
+    };
+    UniqueAbility(Ability ability) : ability_(ability) {};
+    Ability getAbility() const;
+private:
+    Ability ability_ = Ability::None;
+};
+
+class Card {
+public:
+    enum class Category {
+        None,
+        Action,
+        Attack,
+        Treasure,
+        Victory,
+    };
+    enum class Type {
+        None = 0,
+        Copper = 1,
+        Silver = 2,
+        Gold = 3,
+        Estate = 4,
+        Duchy = 5,
+        Province = 6,
+        Chapel = 7,
+        Cellar = 8,
+        Moneylender = 9,
+        Workshop = 10,
+        Merchant = 11,
+        Village = 12,
+        Market = 13,
+        Laboratory = 14,
+        Festival = 15,
+        Smithy = 16
+    };
+
+    Card(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility) :
+        type_(type), name_(name), cost_(cost), abilitys_(abilitys), uniqueAbility_(uniqueAbility), categoris_(categoris) {};
+    int getCost() const;
+    void print() const;
+    void printPretty() const;
+private:
+    Type type_;
+    std::string name_;
+    int cost_ = 0;
+    std::vector<BasicAbility> abilitys_;
+    UniqueAbility uniqueAbility_;
+    std::vector<Category> categoris_;
+};
+
+class CardPile {
+public:
+    void addCard(Card::Type card);
+    Card::Type takeCard(int index);
+    int getSize() const;
+    virtual void print() const;
+    void shuffle();
+    void insert(const std::vector<Card::Type>& cards);
+    std::vector<Card::Type> takeAllCards();
+
+public: // for test
+    const std::vector<Card::Type>& getCardsForTest() const;
+
+protected:
+    std::vector<Card::Type> cards_;
+};
+
+class Supply {
+public:
+    using Pile = std::pair<Card::Type, int>;
+    void initCards();
+    bool checkCanBuyCard(Card::Type card) const;
+    RetCode discard(Card::Type card);
+    void print() const;
+    void printWithIndex() const;
+    bool isValid(int cardNubmer) const;
+    Card::Type indexToCardType(int cardIndex) const;
+    int cardTypeToIndex(Card::Type cardType) const;
+
+public: // for test
+    const std::vector<Pile>& getCardsForTest() const;
+
+private:
+    std::vector<Pile> cards_;
+};
+
+class Hand : public CardPile {
+public:
+    void print() const override;
+private:
+};
+
+class Discard : public CardPile {
+public:
+    void print() const override;
+
+private:
+};
+
+class Trash : public CardPile {
+public:
+    void print() const override;
+
+private:
+};
+
+class Deck : public CardPile {
+public:
+    void setStartCard();
+    void print() const override;
+private:
+};
+
+class PlayGround : public CardPile {
+public:
+    void print() const override;
+private:
+};
+
+class Player {
+public:
+    enum class TurnState {
+        Coin,
+        Buy,
+        Action,
+    };
+    std::string GetTurnStateName(Player::TurnState state) {
+        switch (state) {
+            case Player::TurnState::Coin: return "Coin";
+            case Player::TurnState::Buy: return "Buy";
+            case Player::TurnState::Action: return "Action";
+            default: return "Unknown";
+        }
+    }
+    void setStartCard();
+    int getState(Player::TurnState state) const;
+    void resetTurnState();
+    void addCardDiscard(Card::Type card);
+    void addState(Player::TurnState state, int amount);
+    void print() const;
+    RetCode draw(int amount);
+private:
+    PlayGround playGround_;
+    Deck deck_;
+    Hand hand_;
+    Discard discard_;
+    std::map<TurnState, int> turnState;
+};
+
+class CardRegistry {
+public:
+    const Card& getInfo(Card::Type card) const;
+    void initCards();
+    void print() const;
+    bool isVaild(int number) const;
+private:
+    std::map<Card::Type, Card> cards_;
+};
+
+class Game {
+public:
+    int inputBuy();
+    RetCode buyCard(int number);
+    void resetTurnState();
+    void print() const;
+    void init();
+    void draw();
+
+private:
+    void setStartCard();
+    void initSupply();
+    void initRegistry();
+    void addPlayer();
+
+public: // for test
+    const Supply& getSupplyForTest() const;
+
+private:
+    Trash trash_;
+    Supply supply_;
+    std::vector<Player> players_;
+    int playerTurn_ = 0;
+    CardRegistry registry_;
+
+};
+
+inline std::ostream& operator<<(std::ostream& os, const Card::Type& type) {
+    switch (type) {
+        case Card::Type::None: os << "None"; break;
+        case Card::Type::Copper: os << "Copper"; break;
+        case Card::Type::Silver: os << "Silver"; break;
+        case Card::Type::Gold: os << "Gold"; break;
+        case Card::Type::Estate: os << "Estate"; break;
+        case Card::Type::Duchy: os << "Duchy"; break;
+        case Card::Type::Province: os << "Province"; break;
+        case Card::Type::Chapel: os << "Chapel"; break;
+        case Card::Type::Cellar: os << "Cellar"; break;
+        case Card::Type::Moneylender: os << "Moneylender"; break;
+        case Card::Type::Workshop: os << "Workshop"; break;
+        case Card::Type::Merchant: os << "Merchant"; break;
+        case Card::Type::Village: os << "Village"; break;
+        case Card::Type::Market: os << "Market"; break;
+        case Card::Type::Laboratory: os << "Laboratory"; break;
+        case Card::Type::Festival: os << "Festival"; break;
+        case Card::Type::Smithy: os << "Smithy"; break;
+    }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Card::Category& type) {
+    switch (type) {
+        case Card::Category::None: os << "None"; break;
+        case Card::Category::Action: os << "Action"; break;
+        case Card::Category::Attack: os << "Attack"; break;
+        case Card::Category::Treasure: os << "Treasure"; break;
+        case Card::Category::Victory: os << "Victory"; break;
+    }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const UniqueAbility::Ability& ability) {
+    switch (ability) {
+        case UniqueAbility::Ability::None: os << "None"; break;
+        case UniqueAbility::Ability::Chapel: os << "Chapel"; break;
+        case UniqueAbility::Ability::Cellar: os << "Cellar"; break;
+        case UniqueAbility::Ability::Moneylender: os << "Moneylender"; break;
+        case UniqueAbility::Ability::Workshop: os << "Workshop"; break;
+        case UniqueAbility::Ability::Merchant: os << "Merchant"; break;
+    }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const BasicAbility::Ability& ability) {
+    switch (ability) {
+        case BasicAbility::Ability::None: os << "None"; break;
+        case BasicAbility::Ability::Action: os << "Action"; break;
+        case BasicAbility::Ability::Cards: os << "Cards"; break;
+        case BasicAbility::Ability::Coin: os << "Coin"; break;
+        case BasicAbility::Ability::Buy: os << "Buy"; break;
+        case BasicAbility::Ability::Score: os << "Score"; break;
+    }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, const Player::TurnState& state) {
+    switch (state) {
+        case Player::TurnState::Coin: os << "Coin"; break;
+        case Player::TurnState::Buy: os << "Buy"; break;
+        case Player::TurnState::Action: os << "Action"; break;
+    }
+    return os;
+}

@@ -7,13 +7,21 @@ TEST(SampleTest, addNumber) {
 
 TEST(SampleTest, Buy) {
     Game game;
-    game.addPlayer();
-    game.initRegistry();
-    game.initSupply();
-    game.setStartCard();
-    game.resetTurnState();
+    game.init();
 
-    game.buyCard();
+    game.buyCard(0);
+    EXPECT_EQ(59, game.getSupplyForTest().getCardsForTest().at(0).second);
+
     game.print();
     std::cout << "end" << std::endl;
 }
+
+// TEST(SampleTest, Draw) {
+//     Game game;
+//     game.init();
+
+//     game.
+
+//     game.print();
+//     std::cout << "end" << std::endl;
+// }
