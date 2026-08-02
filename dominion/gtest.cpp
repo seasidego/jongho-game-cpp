@@ -44,3 +44,14 @@ TEST(SampleTest, DrawAndDiscard) {
     game.discardAll();
 
 }
+
+TEST(SampleTest, play) {
+    Game game;
+    game.init();
+
+    EXPECT_EQ(RetCode::Success, game.draw(5));
+    EXPECT_EQ(Card::Type::Copper, game.getPlayerForTest().getHandForTest().getCardsForTest().at(3));
+    EXPECT_EQ(RetCode::Success, game.nextPhase());
+    EXPECT_EQ(RetCode::Success, game.play(3));
+    EXPECT_EQ(1, game.getPlayerForTest().getTurnStateForTest().at(TurnState::Coin));
+}

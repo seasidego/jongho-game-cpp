@@ -8,7 +8,12 @@
 #include <set>
 #include <gtest/gtest_prod.h> // 1. 프로덕션 헤더에 이 gtest 제품용 헤더를 추가합니다.
 
-class SupplyTest;
+enum class TurnState {
+    None,
+    Coin,
+    Buy,
+    Action,
+};
 
 enum class RetCode {
     Success,
@@ -23,6 +28,7 @@ enum class RetCode {
     InvaildSupply,
     InvaildState,
     DeckSuffled,
+    CardNotFound,
 };
 
 class BasicAbility {
@@ -37,6 +43,8 @@ public:
     };
     BasicAbility(Ability ability, int amount) : ability_(ability), amount_(amount) {};
     Ability getAbility() const;
+    TurnState getAbilityToTrunState() const;
+    int getAmount() const;
 private:
     Ability ability_ = Ability::None;
     int amount_ = 0;
@@ -90,6 +98,8 @@ public:
     Card(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility) :
         type_(type), name_(name), cost_(cost), abilitys_(abilitys), uniqueAbility_(uniqueAbility), categoris_(categoris) {};
     int getCost() const;
+    const std::vector<Category>& getCategorys() const;
+    const std::vector<BasicAbility>& getAbilitys() const;
     void print() const;
     void printPretty() const;
 private:
@@ -170,34 +180,38 @@ public:
 private:
 };
 
+class CardRegistry;
+
 class Player {
 public:
-    enum class TurnState {
-        Coin,
-        Buy,
+    enum class PlayPhase {
         Action,
+        Buy,
     };
-    std::string GetTurnStateName(Player::TurnState state) {
+    std::string GetTurnStateName(TurnState state) {
         switch (state) {
-            case Player::TurnState::Coin: return "Coin";
-            case Player::TurnState::Buy: return "Buy";
-            case Player::TurnState::Action: return "Action";
+            case TurnState::Coin: return "Coin";
+            case TurnState::Buy: return "Buy";
+            case TurnState::Action: return "Action";
             default: return "Unknown";
         }
     }
     void setStartCard();
-    int getState(Player::TurnState state) const;
+    int getState(TurnState state) const;
     void resetTurnState();
     void addCardDiscard(Card::Type card);
-    void addState(Player::TurnState state, int amount);
+    void addState(TurnState state, int amount);
     void print() const;
     RetCode draw(int amount);
     void discardAll();
+    Card::Type play(int index, const CardRegistry& registry);
+    void nextPhase();
 
 public:
     const Hand& getHandForTest() const;
     const Deck& getDeckForTest() const;
     const Discard& getDiscardForTest() const ;
+    const std::map<TurnState, int>& getTurnStateForTest() const ;
 
 private:
     PlayGround playGround_;
@@ -205,6 +219,7 @@ private:
     Hand hand_;
     Discard discard_;
     std::map<TurnState, int> turnState;
+    PlayPhase currentPhase_;
 };
 
 class CardRegistry {
@@ -226,12 +241,15 @@ public:
     void init();
     RetCode draw(int amount);
     RetCode discardAll();
+    RetCode play(int index);
+    RetCode nextPhase();
 
 private:
     void setStartCard();
     void initSupply();
     void initRegistry();
     void addPlayer();
+    Player* getCurPlayer();
 
 public: // for test
     const Supply& getSupplyForTest() const;
@@ -243,7 +261,6 @@ private:
     std::vector<Player> players_;
     int playerTurn_ = 0;
     CardRegistry registry_;
-
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Card::Type& type) {
@@ -304,11 +321,12 @@ inline std::ostream& operator<<(std::ostream& os, const BasicAbility::Ability& a
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Player::TurnState& state) {
+inline std::ostream& operator<<(std::ostream& os, const TurnState& state) {
     switch (state) {
-        case Player::TurnState::Coin: os << "Coin"; break;
-        case Player::TurnState::Buy: os << "Buy"; break;
-        case Player::TurnState::Action: os << "Action"; break;
+        case TurnState::None: os << "None"; break;
+        case TurnState::Coin: os << "Coin"; break;
+        case TurnState::Buy: os << "Buy"; break;
+        case TurnState::Action: os << "Action"; break;
     }
     return os;
 }
