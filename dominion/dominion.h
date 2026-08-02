@@ -22,6 +22,7 @@ enum class RetCode {
     InvaildPlayer,
     InvaildSupply,
     InvaildState,
+    DeckSuffled,
 };
 
 class BasicAbility {
@@ -191,6 +192,13 @@ public:
     void addState(Player::TurnState state, int amount);
     void print() const;
     RetCode draw(int amount);
+    void discardAll();
+
+public:
+    const Hand& getHandForTest() const;
+    const Deck& getDeckForTest() const;
+    const Discard& getDiscardForTest() const ;
+
 private:
     PlayGround playGround_;
     Deck deck_;
@@ -216,7 +224,8 @@ public:
     void resetTurnState();
     void print() const;
     void init();
-    void draw();
+    RetCode draw(int amount);
+    RetCode discardAll();
 
 private:
     void setStartCard();
@@ -226,6 +235,7 @@ private:
 
 public: // for test
     const Supply& getSupplyForTest() const;
+    const Player& getPlayerForTest() const;
 
 private:
     Trash trash_;
@@ -299,6 +309,25 @@ inline std::ostream& operator<<(std::ostream& os, const Player::TurnState& state
         case Player::TurnState::Coin: os << "Coin"; break;
         case Player::TurnState::Buy: os << "Buy"; break;
         case Player::TurnState::Action: os << "Action"; break;
+    }
+    return os;
+}
+
+inline std::ostream& operator<<(std::ostream& os, RetCode code) {
+    switch (code) {
+        case RetCode::Success:              os << "Success"; break;
+        case RetCode::NoEnoughBuy:          os << "NoEnoughBuy"; break;
+        case RetCode::NoEnoughCoin:         os << "NoEnoughCoin"; break;
+        case RetCode::EmptyDeck:            os << "EmptyDeck"; break;
+        case RetCode::EmptySupply:          os << "EmptySupply"; break;
+        case RetCode::EmptyHand:            os << "EmptyHand"; break;
+        case RetCode::EmptyDiscard:         os << "EmptyDiscard"; break;
+        case RetCode::EmptyDiscardAndDeck:  os << "EmptyDiscardAndDeck"; break;
+        case RetCode::InvaildPlayer:        os << "InvaildPlayer"; break;
+        case RetCode::InvaildSupply:        os << "InvaildSupply"; break;
+        case RetCode::InvaildState:         os << "InvaildState"; break;
+        case RetCode::DeckSuffled:          os << "DeckSuffled"; break;
+        default:                            os << "UnknownRetCode"; break;
     }
     return os;
 }

@@ -110,7 +110,9 @@ void CardPile::addCard(Card::Type card) {
 
 Card::Type CardPile::takeCard(int index) {
     if (index >= 0 && index < cards_.size()) {
-        return cards_[index];
+        Card::Type card = cards_[index];
+        cards_.erase(cards_.begin() + index);
+        return card;
     }
     return Card::Type::None;
 }
@@ -328,6 +330,7 @@ void Player::resetTurnState() {
 }
 
 RetCode Player::draw(int amount) {
+    bool shuffle = false;
     if (discard_.getSize() <= 0 && deck_.getSize() <= 0) {
         return RetCode::EmptyDiscardAndDeck;
     }
@@ -335,13 +338,35 @@ RetCode Player::draw(int amount) {
     if (discard_.getSize() > 0 && deck_.getSize() == 0) {
         discard_.shuffle();
         deck_.insert(discard_.takeAllCards());
+        shuffle = true;
     }
 
     for (int i = 0; i < amount; i++) {
-        auto card = deck_.takeCard(0);
-        hand_.addCard(card);
+        hand_.addCard(deck_.takeCard(0));
+    }
+    if (shuffle) {
+        return RetCode::DeckSuffled;
     }
     return RetCode::Success;
+}
+
+void Player::discardAll() {
+    int size = hand_.getSize();
+    for (int i = 0; i < size; i++) {
+        discard_.addCard(hand_.takeCard(0)) ;
+    }
+}
+
+const Hand& Player::getHandForTest() const {
+    return hand_;
+}
+
+const Deck& Player::getDeckForTest() const {
+    return deck_;
+}
+
+const Discard& Player::getDiscardForTest() const {
+    return discard_;
 }
 
 const Card& CardRegistry::getInfo(Card::Type card) const {
@@ -492,8 +517,32 @@ const Supply& Game::getSupplyForTest() const {
     return supply_;
 }
 
-void Game::draw() {
-    // players_.at(playerTurn_)
+RetCode Game::draw(int amount) {
+    if (playerTurn_ > players_.size() && playerTurn_ < 0) {
+        return RetCode::InvaildPlayer;
+    }
+
+    Player& player = players_.at(playerTurn_);
+    RetCode ret = player.draw(amount);
+
+    if (ret == RetCode::EmptyDiscardAndDeck) {
+        return RetCode::EmptyDiscardAndDeck;
+    }
+    else if (ret == RetCode::DeckSuffled) {
+        return RetCode::DeckSuffled;
+    }
+    return RetCode::Success;
+}
+
+RetCode Game::discardAll() {
+    if (playerTurn_ > players_.size() && playerTurn_ < 0) {
+        return RetCode::InvaildPlayer;
+    }
+
+    Player& player = players_.at(playerTurn_);
+    player.discardAll();
+
+    return RetCode::Success;
 }
 
 void Game::init() {
@@ -502,4 +551,8 @@ void Game::init() {
     initSupply();
     setStartCard();
     resetTurnState();
+}
+
+const Player& Game::getPlayerForTest() const{
+    return players_.at(playerTurn_);
 }
