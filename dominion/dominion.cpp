@@ -175,12 +175,23 @@ const std::vector<Card::Type>& CardPile::getCardsForTest() const {
     return cards_;
 }
 
+std::vector<Card::Type>& CardPile::getCardsForTest() {
+    return cards_;
+}
+
 void Deck::setStartCard() {
     for (int i = 0; i < 3; i++) {
         cards_.emplace_back(Card::Type::Estate);
     }
     for (int i = 0; i < 7; i++) {
         cards_.emplace_back(Card::Type::Copper);
+    }
+}
+
+void Deck::setStartCardAllVillegeForTest() {
+    cards_.clear();
+    for (int i = 0; i < 10; i++) {
+        cards_.emplace_back(Card::Type::Village);
     }
 }
 
@@ -321,7 +332,7 @@ void Player::print() const {
     discard_.print();
     playGround_.print();
     std::cout << "States: " << std::endl;
-    for (const auto& t : turnState) {
+    for (const auto& t : turnState_) {
         std::cout << t.first << " : " << t.second << std::endl;
     }
 }
@@ -331,8 +342,8 @@ void Player::setStartCard() {
 }
 
 int Player::getState(TurnState state) const {
-    auto it = turnState.find(state);
-    if (it == turnState.end()) {
+    auto it = turnState_.find(state);
+    if (it == turnState_.end()) {
         return 0;
     }
     return it->second;
@@ -343,17 +354,17 @@ void Player::addCardDiscard(Card::Type card) {
 }
 
 void Player::addState(TurnState state, int amount) {
-    auto it = turnState.find(state);
-    if (it == turnState.end()) {
+    auto it = turnState_.find(state);
+    if (it == turnState_.end()) {
         return;
     }
     it->second += amount;
 }
 
 void Player::resetTurnState() {
-    turnState[TurnState::Action] = 1;
-    turnState[TurnState::Buy] = 1;
-    turnState[TurnState::Coin] = 0;
+    turnState_[TurnState::Action] = 1;
+    turnState_[TurnState::Buy] = 1;
+    turnState_[TurnState::Coin] = 0;
 }
 
 RetCode Player::draw(int amount) {
@@ -392,9 +403,10 @@ Card::Type Player::play(int index, const CardRegistry& registry) {
 
     const auto& category = registry.getInfo(cardType).getCategorys();
     if (currentPhase_ == PlayPhase::Action) {
-        if (std::find(category.begin(), category.end(), Card::Category::Action) == category.end()) {
+        if (std::find(category.begin(), category.end(), Card::Category::Action) == category.end() || turnState_.at(TurnState::Action) <= 0) {
             return Card::Type::None;
         }
+        addState(TurnState::Action, -1);
     }
     else if (currentPhase_ == PlayPhase::Buy) {
         if (std::find(category.begin(), category.end(), Card::Category::Treasure) == category.end()) {
@@ -425,8 +437,24 @@ const Discard& Player::getDiscardForTest() const {
     return discard_;
 }
 
+Hand& Player::getHandForTest() {
+    return hand_;
+}
+
+Deck& Player::getDeckForTest() {
+    return deck_;
+}
+
+Discard& Player::getDiscardForTest() {
+    return discard_;
+}
+
 const std::map<TurnState, int>& Player::getTurnStateForTest() const {
-    return turnState;
+    return turnState_;
+}
+
+void Player::setStartCardAllVillegeForTest() {
+    deck_.setStartCardAllVillegeForTest();
 }
 
 const Card& CardRegistry::getInfo(Card::Type card) const {
@@ -475,7 +503,7 @@ void CardRegistry::initCards() {
         { {BasicAbility(BasicAbility::Ability::Action, 2)}, {BasicAbility(BasicAbility::Ability::Buy, 1)}, {BasicAbility(BasicAbility::Ability::Coin, 1)} },
         UniqueAbility(UniqueAbility::Ability::None)));
     cards_.emplace(Card::Type::Smithy, Card(Card::Type::Smithy, "Smithy", 3, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Cards, 2)}}, UniqueAbility(UniqueAbility::Ability::None)));
+        { {BasicAbility(BasicAbility::Ability::Cards, 3)}}, UniqueAbility(UniqueAbility::Ability::None)));
 }
 
 void CardRegistry::print() const{
@@ -627,6 +655,19 @@ const Player& Game::getPlayerForTest() const{
     return players_.at(playerTurn_);
 }
 
+Player& Game::getPlayerForTest() {
+    return players_.at(playerTurn_);
+}
+
+RetCode Game::setStartCardAllVillegeForTest() {
+    Player* player = getCurPlayer();
+    if (player == nullptr) {
+        return RetCode::InvaildPlayer;
+    }
+
+    player->setStartCardAllVillegeForTest();
+}
+
 RetCode Game::play(int index) {
     Player* _player = getCurPlayer();
     if (_player == nullptr) {
@@ -639,13 +680,22 @@ RetCode Game::play(int index) {
         return RetCode::CardNotFound;
     }
 
+    int drawCard = 0;
     for (const auto& a : registry_.getInfo(card).getAbilitys())  {
         auto state = a.getAbilityToTrunState();
-        if (state == TurnState::None) {
-            continue;
+        if (state != TurnState::None) {
+            player.addState(state, a.getAmount());
         }
-        player.addState(state, a.getAmount());
+
+        if (a.getAbility() == BasicAbility::Ability::Cards) {
+            drawCard = a.getAmount();
+        }
     }
+
+    if (drawCard > 0) {
+        return draw(drawCard);
+    }
+
     return RetCode::Success;
 }
 
@@ -658,4 +708,5 @@ RetCode Game::nextPhase() {
 
     player.nextPhase();
     return RetCode::Success;
+
 }

@@ -123,6 +123,7 @@ public:
 
 public: // for test
     const std::vector<Card::Type>& getCardsForTest() const;
+    std::vector<Card::Type>& getCardsForTest();
 
 protected:
     std::vector<Card::Type> cards_;
@@ -171,6 +172,9 @@ class Deck : public CardPile {
 public:
     void setStartCard();
     void print() const override;
+
+public:
+    void setStartCardAllVillegeForTest();
 private:
 };
 
@@ -188,14 +192,7 @@ public:
         Action,
         Buy,
     };
-    std::string GetTurnStateName(TurnState state) {
-        switch (state) {
-            case TurnState::Coin: return "Coin";
-            case TurnState::Buy: return "Buy";
-            case TurnState::Action: return "Action";
-            default: return "Unknown";
-        }
-    }
+
     void setStartCard();
     int getState(TurnState state) const;
     void resetTurnState();
@@ -211,14 +208,18 @@ public:
     const Hand& getHandForTest() const;
     const Deck& getDeckForTest() const;
     const Discard& getDiscardForTest() const ;
+    Hand& getHandForTest();
+    Deck& getDeckForTest();
+    Discard& getDiscardForTest();
     const std::map<TurnState, int>& getTurnStateForTest() const ;
+    void setStartCardAllVillegeForTest();
 
 private:
     PlayGround playGround_;
     Deck deck_;
     Hand hand_;
     Discard discard_;
-    std::map<TurnState, int> turnState;
+    std::map<TurnState, int> turnState_;
     PlayPhase currentPhase_;
 };
 
@@ -254,6 +255,8 @@ private:
 public: // for test
     const Supply& getSupplyForTest() const;
     const Player& getPlayerForTest() const;
+    Player& getPlayerForTest();
+    RetCode setStartCardAllVillegeForTest();
 
 private:
     Trash trash_;

@@ -1,11 +1,11 @@
 #include <gtest/gtest.h>
 #include "dominion.h"
 
-TEST(SampleTest, addNumber) {
+TEST(Dominion, addNumber) {
     EXPECT_EQ(3, 1 + 2);
 }
 
-TEST(SampleTest, Buy) {
+TEST(Dominion, Buy) {
     Game game;
     game.init();
 
@@ -17,7 +17,7 @@ TEST(SampleTest, Buy) {
     // std::cout << "end" << std::endl;
 }
 
-TEST(SampleTest, DrawAndDiscard) {
+TEST(Dominion, DrawAndDiscard) {
     Game game;
     game.init();
 
@@ -45,7 +45,7 @@ TEST(SampleTest, DrawAndDiscard) {
 
 }
 
-TEST(SampleTest, play) {
+TEST(Dominion, play) {
     Game game;
     game.init();
 
@@ -54,4 +54,30 @@ TEST(SampleTest, play) {
     EXPECT_EQ(RetCode::Success, game.nextPhase());
     EXPECT_EQ(RetCode::Success, game.play(3));
     EXPECT_EQ(1, game.getPlayerForTest().getTurnStateForTest().at(TurnState::Coin));
+}
+
+TEST(Dominion, playActionCard) {
+    Game game;
+    game.init();
+    game.setStartCardAllVillegeForTest();
+    Player& player = game.getPlayerForTest();
+    EXPECT_EQ(RetCode::Success, game.draw(5));
+    auto& deckCard = player.getDeckForTest().getCardsForTest();
+    deckCard.emplace(deckCard.begin(), Card::Type::Smithy);
+
+    EXPECT_EQ(6, game.getPlayerForTest().getDeckForTest().getSize());
+    EXPECT_EQ(Card::Type::Smithy, game.getPlayerForTest().getDeckForTest().getCardsForTest().at(0));
+    EXPECT_EQ(Card::Type::Village, game.getPlayerForTest().getHandForTest().getCardsForTest().at(0));
+
+    // play village: +1card +2action
+    game.play(0);
+    EXPECT_EQ(5, player.getHandForTest().getSize());
+    EXPECT_EQ(2, player.getTurnStateForTest().at(TurnState::Action));
+
+    EXPECT_EQ(Card::Type::Smithy, game.getPlayerForTest().getHandForTest().getCardsForTest().at(4));
+
+    // play smithy: +3card
+    EXPECT_EQ(RetCode::Success, game.play(4));
+    EXPECT_EQ(7, player.getHandForTest().getSize());
+    EXPECT_EQ(1, player.getTurnStateForTest().at(TurnState::Action));
 }
