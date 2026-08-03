@@ -66,6 +66,8 @@ private:
     Ability ability_ = Ability::None;
 };
 
+class Player;
+
 class Card {
 public:
     enum class Category {
@@ -102,6 +104,9 @@ public:
     const std::vector<BasicAbility>& getAbilitys() const;
     void print() const;
     void printPretty() const;
+
+    virtual RetCode play(Player& player) const;
+
 private:
     Type type_;
     std::string name_;
@@ -109,6 +114,15 @@ private:
     std::vector<BasicAbility> abilitys_;
     UniqueAbility uniqueAbility_;
     std::vector<Category> categoris_;
+};
+
+class Chapel : public Card {
+public:
+    Chapel(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility)
+    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+
+    RetCode play(Player& player) const override;
+private:
 };
 
 class CardPile {
@@ -203,6 +217,7 @@ public:
     void discardAll();
     Card::Type play(int index, const CardRegistry& registry);
     void nextPhase();
+    RetCode trashFromHand() const;
 
 public:
     const Hand& getHandForTest() const;
@@ -230,7 +245,8 @@ public:
     void print() const;
     bool isVaild(int number) const;
 private:
-    std::map<Card::Type, Card> cards_;
+    // std::map<Card::Type, Card> cards_;
+    std::map<Card::Type, std::unique_ptr<Card>> cards_;
 };
 
 class Game {

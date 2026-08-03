@@ -81,3 +81,17 @@ TEST(Dominion, playActionCard) {
     EXPECT_EQ(7, player.getHandForTest().getSize());
     EXPECT_EQ(1, player.getTurnStateForTest().at(TurnState::Action));
 }
+
+
+TEST(Dominion, playUniqueActionCard) {
+    Game game;
+    game.init();
+
+    Player& player = game.getPlayerForTest();
+    auto& deckCard = player.getDeckForTest().getCardsForTest();
+    deckCard.emplace(deckCard.begin(), Card::Type::Chapel);
+    EXPECT_EQ(Card::Type::Chapel, game.getPlayerForTest().getDeckForTest().getCardsForTest().at(0));
+    EXPECT_EQ(RetCode::Success, game.draw(5));
+
+    game.play(0);
+}

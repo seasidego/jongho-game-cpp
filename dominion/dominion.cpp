@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <iterator>
+#include <memory>
 #include <vector>
 
 void printLine() {
@@ -125,6 +126,36 @@ void Card::print() const {
         std::cout << c << " ";
     }
     printLine();
+}
+
+RetCode Card::play(Player& player) const {
+    int drawCard = 0;
+    for (const auto& a : abilitys_)  {
+        auto state = a.getAbilityToTrunState();
+        if (state != TurnState::None) {
+            player.addState(state, a.getAmount());
+        }
+
+        if (a.getAbility() == BasicAbility::Ability::Cards) {
+            drawCard = a.getAmount();
+        }
+    }
+
+    if (drawCard > 0) {
+        return player.draw(drawCard);
+    }
+
+    return RetCode::Success;
+}
+
+RetCode Chapel::play(Player& player) const {
+    auto retCode = Card::play(player);
+    if (retCode != RetCode::Success) {
+        return retCode;
+    }
+
+    std::cout << "chapel played" << std::endl;
+    return player.trashFromHand();
 }
 
 void CardPile::addCard(Card::Type card) {
@@ -457,8 +488,14 @@ void Player::setStartCardAllVillegeForTest() {
     deck_.setStartCardAllVillegeForTest();
 }
 
+RetCode Player::trashFromHand() const {
+
+
+    return RetCode::Success;
+}
+
 const Card& CardRegistry::getInfo(Card::Type card) const {
-    return cards_.at(card);
+    return *(cards_.at(card));
 }
 
 // int CardRegistry::getSize() const {
@@ -466,49 +503,161 @@ const Card& CardRegistry::getInfo(Card::Type card) const {
 // }
 
 void CardRegistry::initCards() {
-    cards_.emplace(Card::Type::Copper, Card(Card::Type::Copper, "Copper", 0, {Card::Category::Treasure},
-        { {BasicAbility(BasicAbility::Ability::Coin, 1)} }, UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Silver, Card(Card::Type::Silver, "Silver", 3, {Card::Category::Treasure},
-        { {BasicAbility(BasicAbility::Ability::Coin, 2)} }, UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Gold, Card(Card::Type::Gold, "Gold", 6, {Card::Category::Treasure},
-        { {BasicAbility(BasicAbility::Ability::Coin, 2)} }, UniqueAbility(UniqueAbility::Ability::None)));
+    cards_.emplace(
+        Card::Type::Copper,
+        std::make_unique<Card>(
+            Card::Type::Copper, "Copper", 0,
+            std::vector<Card::Category>{Card::Category::Treasure},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 1} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Silver,
+        std::make_unique<Card>(
+            Card::Type::Silver, "Silver", 3,
+            std::vector<Card::Category>{Card::Category::Treasure},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 2} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Gold,
+        std::make_unique<Card>(
+            Card::Type::Gold, "Gold", 6,
+            std::vector<Card::Category>{Card::Category::Treasure},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 2} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
 
-    cards_.emplace(Card::Type::Estate, Card(Card::Type::Estate, "Estate", 2, {Card::Category::Victory},
-        { {BasicAbility(BasicAbility::Ability::Score, 1)} }, UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Duchy, Card(Card::Type::Duchy, "Duchy", 5, {Card::Category::Victory},
-        { {BasicAbility(BasicAbility::Ability::Score, 3)} }, UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Province, Card(Card::Type::Province, "Province", 8, {Card::Category::Victory},
-        { {BasicAbility(BasicAbility::Ability::Score, 6)} }, UniqueAbility(UniqueAbility::Ability::None)));
+    cards_.emplace(
+        Card::Type::Estate,
+        std::make_unique<Card>(
+            Card::Type::Estate, "Estate", 2,
+            std::vector<Card::Category>{Card::Category::Victory},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 1} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Duchy,
+        std::make_unique<Card>(
+            Card::Type::Duchy, "Duchy", 5,
+            std::vector<Card::Category>{Card::Category::Victory},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 3} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Province,
+        std::make_unique<Card>(
+            Card::Type::Province, "Province", 8,
+            std::vector<Card::Category>{Card::Category::Victory},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 6} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
 
-    cards_.emplace(Card::Type::Chapel, Card(Card::Type::Chapel, "Chapel", 2, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::None, 0)} }, UniqueAbility(UniqueAbility::Ability::Chapel)));
-    cards_.emplace(Card::Type::Cellar, Card(Card::Type::Cellar, "Cellar", 2, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Action, 1)} }, UniqueAbility(UniqueAbility::Ability::Cellar)));
-    cards_.emplace(Card::Type::Moneylender, Card(Card::Type::Moneylender, "Moneylender", 4, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::None, 0)} }, UniqueAbility(UniqueAbility::Ability::Moneylender)));
-    cards_.emplace(Card::Type::Workshop, Card(Card::Type::Workshop, "Workshop", 3, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::None, 0)} }, UniqueAbility(UniqueAbility::Ability::Workshop)));
-    cards_.emplace(Card::Type::Merchant, Card(Card::Type::Merchant, "Merchant", 3, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Action, 1)}, {BasicAbility(BasicAbility::Ability::Cards, 1)} }, UniqueAbility(UniqueAbility::Ability::Merchant)));
+    cards_.emplace(
+        Card::Type::Chapel,
+        std::make_unique<Chapel>(
+            Card::Type::Chapel, "Chapel", 2,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
+            UniqueAbility(UniqueAbility::Ability::Chapel)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Cellar,
+        std::make_unique<Card>(
+            Card::Type::Cellar, "Cellar", 2,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 1} },
+            UniqueAbility(UniqueAbility::Ability::Cellar)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Moneylender,
+        std::make_unique<Card>(
+            Card::Type::Moneylender, "Moneylender", 4,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
+            UniqueAbility(UniqueAbility::Ability::Moneylender)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Workshop,
+        std::make_unique<Card>(
+            Card::Type::Workshop, "Workshop", 3,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
+            UniqueAbility(UniqueAbility::Ability::Workshop)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Merchant,
+        std::make_unique<Card>(
+            Card::Type::Merchant, "Merchant", 3,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 1}, {BasicAbility::Ability::Cards, 1} },
+            UniqueAbility(UniqueAbility::Ability::Merchant)
+        )
+    );
 
-    cards_.emplace(Card::Type::Village, Card(Card::Type::Village, "Village", 3, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Cards, 1)}, {BasicAbility(BasicAbility::Ability::Action, 2)} }, UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Market, Card(Card::Type::Market, "Market", 5, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Cards, 1)}, {BasicAbility(BasicAbility::Ability::Action, 2)},
-            {BasicAbility(BasicAbility::Ability::Buy, 1)}, {BasicAbility(BasicAbility::Ability::Coin, 2)} },
-        UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Laboratory, Card(Card::Type::Laboratory, "Laboratory", 5, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Cards, 2)}, {BasicAbility(BasicAbility::Ability::Action, 1)} }, UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Festival, Card(Card::Type::Festival, "Festival", 5, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Action, 2)}, {BasicAbility(BasicAbility::Ability::Buy, 1)}, {BasicAbility(BasicAbility::Ability::Coin, 1)} },
-        UniqueAbility(UniqueAbility::Ability::None)));
-    cards_.emplace(Card::Type::Smithy, Card(Card::Type::Smithy, "Smithy", 3, {Card::Category::Action},
-        { {BasicAbility(BasicAbility::Ability::Cards, 3)}}, UniqueAbility(UniqueAbility::Ability::None)));
+    cards_.emplace(
+        Card::Type::Village,
+        std::make_unique<Card>(
+            Card::Type::Village, "Village", 3,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 1}, {BasicAbility::Ability::Action, 2} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Market,
+        std::make_unique<Card>(
+            Card::Type::Market, "Market", 5,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{
+                {BasicAbility::Ability::Cards, 1}, {BasicAbility::Ability::Action, 2},
+                {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 2}
+            },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Laboratory,
+        std::make_unique<Card>(
+            Card::Type::Laboratory, "Laboratory", 5,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 2}, {BasicAbility::Ability::Action, 1} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Festival,
+        std::make_unique<Card>(
+            Card::Type::Festival, "Festival", 5,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 2}, {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 1} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
+    cards_.emplace(
+        Card::Type::Smithy,
+        std::make_unique<Card>(
+            Card::Type::Smithy, "Smithy", 3,
+            std::vector<Card::Category>{Card::Category::Action},
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 3} },
+            UniqueAbility(UniqueAbility::Ability::None)
+        )
+    );
 }
 
 void CardRegistry::print() const{
     for (const auto& r : cards_) {
-        r.second.print();
+        r.second->print();
     }
 }
 
@@ -666,6 +815,7 @@ RetCode Game::setStartCardAllVillegeForTest() {
     }
 
     player->setStartCardAllVillegeForTest();
+    return RetCode::Success;
 }
 
 RetCode Game::play(int index) {
@@ -675,28 +825,14 @@ RetCode Game::play(int index) {
     }
     Player& player = *_player;
 
-    auto card = player.play(index, registry_);
-    if (card == Card::Type::None) {
+    auto cardType = player.play(index, registry_);
+    if (cardType == Card::Type::None) {
         return RetCode::CardNotFound;
     }
 
-    int drawCard = 0;
-    for (const auto& a : registry_.getInfo(card).getAbilitys())  {
-        auto state = a.getAbilityToTrunState();
-        if (state != TurnState::None) {
-            player.addState(state, a.getAmount());
-        }
+    const auto& card = registry_.getInfo(cardType);
 
-        if (a.getAbility() == BasicAbility::Ability::Cards) {
-            drawCard = a.getAmount();
-        }
-    }
-
-    if (drawCard > 0) {
-        return draw(drawCard);
-    }
-
-    return RetCode::Success;
+    return card.play(player);
 }
 
 RetCode Game::nextPhase() {
