@@ -1,5 +1,10 @@
 [
   {
+    "label": "cmake_build_task",
+    "command": "cmake --build build",
+    "reveal": "always",
+  },
+  {
     "label": "run_dominion",
     "command": "cmake --build build --target dominion && ./build/dominion/dominion",
     "reveal": "always",

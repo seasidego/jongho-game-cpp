@@ -6,4 +6,12 @@
     "program": "build/dominion/dominion",
     "build": "cmake_build_task",
   },
+  {
+    "adapter": "CodeLLDB",
+    "label": "debug_dominion_gtest",
+    "request": "launch",
+    "program": "build/dominion/dominion",
+    "args": ["gtest", "--gtest_color=yes"],
+    "build": "cmake_build_task",
+  },
 ]

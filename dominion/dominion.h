@@ -29,6 +29,7 @@ enum class RetCode {
     InvaildState,
     DeckSuffled,
     CardNotFound,
+    UserDontWant,
 };
 
 class BasicAbility {
@@ -67,6 +68,7 @@ private:
 };
 
 class Player;
+class Game;
 
 class Card {
 public:
@@ -105,7 +107,7 @@ public:
     void print() const;
     void printPretty() const;
 
-    virtual RetCode play(Player& player) const;
+    virtual RetCode play(Player& player, Game& game) const;
 
 private:
     Type type_;
@@ -121,7 +123,16 @@ public:
     Chapel(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility)
     : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
 
-    RetCode play(Player& player) const override;
+    RetCode play(Player& player, Game& game) const override;
+private:
+};
+
+class Cellar : public Card {
+public:
+    Cellar(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility)
+    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+
+    RetCode play(Player& player, Game& game) const override;
 private:
 };
 
@@ -134,6 +145,7 @@ public:
     void shuffle();
     void insert(const std::vector<Card::Type>& cards);
     std::vector<Card::Type> takeAllCards();
+    bool isValid(int cardIndex) const;
 
 public: // for test
     const std::vector<Card::Type>& getCardsForTest() const;
@@ -213,11 +225,13 @@ public:
     void addCardDiscard(Card::Type card);
     void addState(TurnState state, int amount);
     void print() const;
+    void printHand() const;
     RetCode draw(int amount);
     void discardAll();
     Card::Type play(int index, const CardRegistry& registry);
     void nextPhase();
-    RetCode trashFromHand() const;
+    Card::Type takeCardFromHand(int index);
+    const Hand& getHand() const;
 
 public:
     const Hand& getHandForTest() const;
@@ -226,7 +240,7 @@ public:
     Hand& getHandForTest();
     Deck& getDeckForTest();
     Discard& getDiscardForTest();
-    const std::map<TurnState, int>& getTurnStateForTest() const ;
+    const std::map<TurnState, int>& getTurnStateForTest() const;
     void setStartCardAllVillegeForTest();
 
 private:
@@ -251,6 +265,7 @@ private:
 
 class Game {
 public:
+    static std::vector<std::string> splitString(std::string s);
     int inputBuy();
     RetCode buyCard(int number);
     void resetTurnState();
@@ -260,6 +275,9 @@ public:
     RetCode discardAll();
     RetCode play(int index);
     RetCode nextPhase();
+    RetCode trashCardFromHand(int index);
+    std::vector<int> inputHandIndex(int amount) const;
+
 
 private:
     void setStartCard();
@@ -267,6 +285,7 @@ private:
     void initRegistry();
     void addPlayer();
     Player* getCurPlayer();
+    const Player* getCurPlayer() const;
 
 public: // for test
     const Supply& getSupplyForTest() const;

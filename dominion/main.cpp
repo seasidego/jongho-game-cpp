@@ -5,6 +5,7 @@
 
 int main(int argc, char **argv) {
 
+
     for (int i = 0; i < argc ; i++) {
         // 실행할 때 arg에 gtest가 있으면
         if (std::strcmp(argv[i], "gtest") == 0) {

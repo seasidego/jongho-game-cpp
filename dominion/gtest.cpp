@@ -92,6 +92,7 @@ TEST(Dominion, playUniqueActionCard) {
     deckCard.emplace(deckCard.begin(), Card::Type::Chapel);
     EXPECT_EQ(Card::Type::Chapel, game.getPlayerForTest().getDeckForTest().getCardsForTest().at(0));
     EXPECT_EQ(RetCode::Success, game.draw(5));
-
     game.play(0);
+
+    EXPECT_EQ(2, player.getHandForTest().getSize());
 }

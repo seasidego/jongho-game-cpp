@@ -4,6 +4,8 @@
 #include <iterator>
 #include <memory>
 #include <vector>
+#include <string>
+#include <sstream>
 
 void printLine() {
     std::cout << "-------------------" << std::endl;
@@ -128,7 +130,7 @@ void Card::print() const {
     printLine();
 }
 
-RetCode Card::play(Player& player) const {
+RetCode Card::play(Player& player, Game& game) const {
     int drawCard = 0;
     for (const auto& a : abilitys_)  {
         auto state = a.getAbilityToTrunState();
@@ -148,15 +150,59 @@ RetCode Card::play(Player& player) const {
     return RetCode::Success;
 }
 
-RetCode Chapel::play(Player& player) const {
-    auto retCode = Card::play(player);
+RetCode Chapel::play(Player& player, Game& game) const {
+    auto retCode = Card::play(player, game);
+    player.getHand().print();
     if (retCode != RetCode::Success) {
         return retCode;
     }
+    auto indexes = game.inputHandIndex(4);
+    // if indexes is not sorted, and when index 1 is trashed and index 3 need to trashed,
+    // index 3 will not be the index 3 in first cardpile
+    std::sort(indexes.begin(), indexes.end(), [](const auto& a, const auto& b){
+        return a > b;
+    });
 
-    std::cout << "chapel played" << std::endl;
-    return player.trashFromHand();
+    for (const auto index : indexes) {
+        std::cout << index << std::endl;
+        if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
+            return RetCode::UserDontWant;
+        }
+        if (game.trashCardFromHand(index) != RetCode::Success) {
+            return RetCode::CardNotFound;
+        }
+    }
+
+    return RetCode::Success;
 }
+
+// RetCode Cellar::play(Player& player, Game& game) const {
+//     auto retCode = Card::play(player, game);
+//     if (retCode != RetCode::Success) {
+//         return retCode;
+//     }
+
+//     int index = 0;
+//     int cardNubmer = 0;
+//     Card::Type card;
+//     while (true) {
+//         index = game.inputHandIndex();
+
+//         if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
+//             break;
+//         }
+//         card = player.takeCardFromHand(index);
+//         if (card == Card::Type::None) {
+//             continue;
+//         }
+//         player.addCardDiscard(card);
+//         cardNubmer++;
+//     }
+//     for (int i = 0; i <= 4; i++) {
+//         player.draw(cardNubmer);
+//     }
+//     return RetCode::Success;
+// }
 
 void CardPile::addCard(Card::Type card) {
     cards_.emplace_back(card);
@@ -202,6 +248,13 @@ std::vector<Card::Type> CardPile::takeAllCards() {
     return cards;
 }
 
+bool CardPile::isValid(int cardIndex) const {
+    if (cardIndex >= cards_.size() || cardIndex < 0) {
+        return false;
+    }
+    return true;
+}
+
 const std::vector<Card::Type>& CardPile::getCardsForTest() const {
     return cards_;
 }
@@ -211,7 +264,13 @@ std::vector<Card::Type>& CardPile::getCardsForTest() {
 }
 
 void Deck::setStartCard() {
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 1; i++) {
+        cards_.emplace_back(Card::Type::Estate);
+    }
+    for (int i = 0; i < 1; i++) {
+        cards_.emplace_back(Card::Type::Copper);
+    }
+    for (int i = 0; i < 1; i++) {
         cards_.emplace_back(Card::Type::Estate);
     }
     for (int i = 0; i < 7; i++) {
@@ -368,6 +427,10 @@ void Player::print() const {
     }
 }
 
+void Player::printHand() const {
+    hand_.print();
+}
+
 void Player::setStartCard() {
     deck_.setStartCard();
 }
@@ -456,6 +519,14 @@ void Player::nextPhase() {
     }
 }
 
+Card::Type Player::takeCardFromHand(int index) {
+    return hand_.takeCard(index);
+}
+
+const Hand& Player::getHand() const {
+    return hand_;
+}
+
 const Hand& Player::getHandForTest() const {
     return hand_;
 }
@@ -486,12 +557,6 @@ const std::map<TurnState, int>& Player::getTurnStateForTest() const {
 
 void Player::setStartCardAllVillegeForTest() {
     deck_.setStartCardAllVillegeForTest();
-}
-
-RetCode Player::trashFromHand() const {
-
-
-    return RetCode::Success;
 }
 
 const Card& CardRegistry::getInfo(Card::Type card) const {
@@ -676,7 +741,8 @@ int Game::inputBuy() {
             continue;
         }
 
-        if (supply_.isValid(cardInt)) {
+        cardInt--;  // user input int is 1 base. card pile is zero base.
+        if (!supply_.isValid(cardInt)) {
             std::cout << "enter number(1~17)" << std::endl;
             continue;
         }
@@ -781,6 +847,14 @@ Player* Game::getCurPlayer() {
     return &players_.at(playerTurn_);
 }
 
+const Player* Game::getCurPlayer() const{
+    if (playerTurn_ > players_.size() && playerTurn_ < 0) {
+        return nullptr;
+    }
+
+    return &players_.at(playerTurn_);
+}
+
 RetCode Game::discardAll() {
     Player* player = getCurPlayer();
     if (player == nullptr) {
@@ -832,7 +906,7 @@ RetCode Game::play(int index) {
 
     const auto& card = registry_.getInfo(cardType);
 
-    return card.play(player);
+    return card.play(player, *this);
 }
 
 RetCode Game::nextPhase() {
@@ -845,4 +919,115 @@ RetCode Game::nextPhase() {
     player.nextPhase();
     return RetCode::Success;
 
+}
+
+// int Game::inputHandIndex() {
+//     std::string cardNumber;
+//     int cardInt = 0;
+//     Player* player = getCurPlayer();
+//     if (player == nullptr) {
+//         return -1;
+//     }
+//     player->printHand();
+//     const Hand& hand = player->getHand();
+
+//     std::cout << "enter number(if you don't want to, enter 0)" << std::endl;
+//     while (true) {
+//         std::cin >> cardNumber;
+//         try {
+//             cardInt = std::stoi(cardNumber);
+//         }
+//         catch (const std::invalid_argument& e) {
+//             std::cout << "enter number" << std::endl;
+//             continue;
+//         }
+//         cardInt--; // user input int is 1 base. card pile is zero base.
+
+//         if (cardInt == -1) { // did -1 to change one base to zero base. so it has to be -1
+//             return cardInt;
+//         }
+
+//         if (!hand.isValid(cardInt)) {
+//             std::cout << "enter number(0(no trash), 1~" << hand.getSize() << ")" << std::endl;
+//             continue;
+//         }
+//         break;
+//     }
+//     return cardInt;
+// }
+
+std::vector<std::string> Game::splitString(std::string s) {
+     std::stringstream ss(s);
+     std::string word;
+     std::vector<std::string> words;
+     int numberInt = 0;
+
+    while (std::getline(ss, word, ',')) {
+         words.push_back(word);
+    }
+
+    return words;
+ }
+
+std::vector<int> Game::inputHandIndex(int amount) const {
+    std::string select;
+    std::vector<int> selectedInt;
+
+    const Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return {};
+    }
+    const Player& player = *_player;
+
+    std::cout << "select indexes of the cards. if you want to stop selecting, enter 0 and press enter" << std::endl;
+    bool wrong = false;
+    while (true) {
+        selectedInt.clear();
+        wrong = false;
+        std::cin >> select;
+        std::vector<std::string> numbers = splitString(select);
+
+        for (const auto& n : numbers) {
+            int number = 0;
+            try {
+                 number = std::stoi(n);
+                 number--;
+            }
+            catch (const std::invalid_argument& e) {
+                std::cout << "enter number" << std::endl;
+                wrong = true;
+                break;
+            }
+            if (number > player.getHand().getSize()) {
+                std::cout << "input went wrong. you can only use 1 ~ " << player.getHand().getSize() << std::endl;
+                wrong = true;
+                break;
+            }
+            if (std::find(selectedInt.begin(), selectedInt.end(), number) != selectedInt.end()) {
+                std::cout << "you can't input same number" << std::endl;
+                wrong = true;
+                break;
+            }
+            selectedInt.emplace_back(number);
+        }
+
+        if (!wrong) {
+            break;
+        }
+    }
+    return selectedInt;
+}
+
+RetCode Game::trashCardFromHand(int index) {
+    Player* player = getCurPlayer();
+    if (player == nullptr) {
+        return RetCode::InvaildPlayer;
+    }
+    Card::Type cardType = player->takeCardFromHand(index);
+    if (cardType == Card::Type::None) {
+        return RetCode::CardNotFound;
+    }
+
+    trash_.addCard(cardType);
+    return RetCode::Success;
 }

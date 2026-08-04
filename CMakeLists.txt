@@ -6,6 +6,9 @@ project(jongho-game-cpp)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# 디버그 빌드 모드 활성화 (반드시 필요)
+set(CMAKE_BUILD_TYPE Debug)
+
 # 하위 프로젝트 폴더들을 등록
 add_subdirectory(dominion)
 
