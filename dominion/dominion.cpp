@@ -11,37 +11,6 @@ void printLine() {
     std::cout << "-------------------" << std::endl;
 }
 
-// UTF-8 문자열의 실제 터미널 출력 너비(바이트 크기 아님)를 계산하는 헬퍼 함수
-int getVisualWidth(const std::string& str) {
-    int width = 0;
-    for (size_t i = 0; i < str.length();) {
-        unsigned char c = str[i];
-        if (c < 0x80) { width += 1; i += 1; }              // 아스키 문자 (1칸)
-        else if ((c & 0xE0) == 0xC0) { width += 2; i += 2; } // 2바이트 문자
-        else if ((c & 0xF0) == 0xE0) { width += 2; i += 3; } // 3바이트 문자 (한글 등, 2칸)
-        else if ((c & 0xF8) == 0xF0) { width += 2; i += 4; } // 4바이트 문자
-        else { i += 1; }
-    }
-    return width;
-}
-
-std::string categoryToString(Card::Category cat) {
-    switch (cat) {
-        case Card::Category::Action:   return "Action";
-        case Card::Category::Attack:   return "Attack";
-        case Card::Category::Treasure: return "Treasure";
-        case Card::Category::Victory:  return "Victory";
-        default: return "";
-    }
-}
-
-// 특정 너비에 맞춰 텍스트와 공백을 조합해주는 함수
-std::string padRight(const std::string& str, int targetWidth) {
-    int currentWidth = getVisualWidth(str);
-    int padding = targetWidth - currentWidth;
-    return str + (padding > 0 ? std::string(padding, ' ') : "");
-}
-
 BasicAbility::Ability BasicAbility::getAbility() const {
     return ability_;
 }
@@ -63,43 +32,6 @@ UniqueAbility::Ability UniqueAbility::getAbility() const {
     return ability_;
 }
 
-void Card::printPretty() const {
-    const int cardWidth = 18; // 테두리를 제외한 내부 콘텐츠 너비
-
-    // 1. 카테고리 문자열 합성 (예: "Action - Attack")
-    std::string catStr = "";
-    for (size_t i = 0; i < categoris_.size(); ++i) {
-        catStr += categoryToString(categoris_[i]);
-        if (i < categoris_.size() - 1) catStr += " - ";
-    }
-
-    // 2. 상단 테두리
-    std::cout << "┌──────────────────┐\n";
-
-    // 3. 카드 이름 (좌측 정렬)
-    std::cout << std::format("│ {} │\n", padRight(name_, cardWidth));
-
-    // 4. 구분선 1
-    std::cout << "├──────────────────┤\n";
-
-    // 5. 비용 및 카테고리 정보 출력
-    std::string costStr = std::format("Cost: {}", cost_);
-    std::cout << std::format("│ {} │\n", padRight(costStr, cardWidth));
-    std::cout << std::format("│ {} │\n", padRight(catStr, cardWidth));
-
-    // 6. 구분선 2 (효과 텍스트 구분을 위한 빈 공간 또는 점선)
-    std::cout << "├──────────────────┤\n";
-
-    // 7. 능력(Abilities) 출력 예시 (기본 능력 개수 등에 따라 조정 가능)
-    // 여기서는 간단히 보기가 좋도록 빈 칸으로 예시를 들거나 실제 데이터 바인딩 가능
-    std::string abilityDemo = "Ability Active";
-    std::cout << std::format("│ {} │\n", padRight(abilityDemo, cardWidth));
-    std::cout << std::format("│ {} │\n", padRight("", cardWidth)); // 여백
-
-    // 8. 하단 테두리
-    std::cout << "└──────────────────┘\n";
-}
-
 int Card::getCost() const{
     return cost_;
 }
@@ -113,8 +45,6 @@ const std::vector<BasicAbility>& Card::getAbilitys() const {
 }
 
 void Card::print() const {
-    // printPretty();
-    return;
     std::cout << "name: " << name_ << std::endl;
     std::cout << "cost: " << cost_ << std::endl;
     std::cout << "abilitys: ";
@@ -970,6 +900,10 @@ std::vector<std::string> Game::splitString(std::string s) {
  }
 
 std::vector<int> Game::inputHandIndex(int amount) const {
+    if (isTest_) {
+        return inputTest_;
+    }
+
     std::string select;
     std::vector<int> selectedInt;
 
@@ -1030,4 +964,9 @@ RetCode Game::trashCardFromHand(int index) {
 
     trash_.addCard(cardType);
     return RetCode::Success;
+}
+
+void Game::setTestInput(const std::vector<int>& indexes) {
+    inputTest_ = indexes;
+    isTest_ = true;
 }

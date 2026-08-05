@@ -6,7 +6,7 @@
 #include <map>
 #include <random>
 #include <set>
-#include <gtest/gtest_prod.h> // 1. 프로덕션 헤더에 이 gtest 제품용 헤더를 추가합니다.
+#include <gtest/gtest_prod.h>
 
 enum class TurnState {
     None,
@@ -99,13 +99,15 @@ public:
         Smithy = 16
     };
 
-    Card(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility) :
-        type_(type), name_(name), cost_(cost), abilitys_(abilitys), uniqueAbility_(uniqueAbility), categoris_(categoris) {};
+    Card(Type type, const std::string& name, int cost,
+        const std::vector<Category>& categoris,
+        const std::vector<BasicAbility>& abilitys,
+        const UniqueAbility& uniqueAbility)
+    : type_(type), name_(name), cost_(cost), abilitys_(abilitys), uniqueAbility_(uniqueAbility), categoris_(categoris) {};
     int getCost() const;
     const std::vector<Category>& getCategorys() const;
     const std::vector<BasicAbility>& getAbilitys() const;
     void print() const;
-    void printPretty() const;
 
     virtual RetCode play(Player& player, Game& game) const;
 
@@ -120,7 +122,10 @@ private:
 
 class Chapel : public Card {
 public:
-    Chapel(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility)
+    Chapel(Type type, const std::string& name, int cost,
+        const std::vector<Category>& categoris,
+        const std::vector<BasicAbility>& abilitys,
+        const UniqueAbility& uniqueAbility)
     : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
 
     RetCode play(Player& player, Game& game) const override;
@@ -129,7 +134,10 @@ private:
 
 class Cellar : public Card {
 public:
-    Cellar(Type type, std::string name, int cost, std::vector<Category> categoris, std::vector<BasicAbility> abilitys, UniqueAbility uniqueAbility)
+    Cellar(Type type, const std::string& name, int cost,
+        const std::vector<Category>& categoris,
+        const std::vector<BasicAbility>& abilitys,
+        const UniqueAbility& uniqueAbility)
     : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
 
     RetCode play(Player& player, Game& game) const override;
@@ -275,9 +283,9 @@ public:
     RetCode discardAll();
     RetCode play(int index);
     RetCode nextPhase();
-    RetCode trashCardFromHand(int index);
     std::vector<int> inputHandIndex(int amount) const;
-
+    RetCode trashCardFromHand(int index);
+    void setTestInput(const std::vector<int>& indexes);
 
 private:
     void setStartCard();
@@ -299,6 +307,8 @@ private:
     std::vector<Player> players_;
     int playerTurn_ = 0;
     CardRegistry registry_;
+    bool isTest_ = false;
+    std::vector<int> inputTest_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Card::Type& type) {
