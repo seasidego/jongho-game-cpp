@@ -83,17 +83,55 @@ TEST(Dominion, playActionCard) {
 }
 
 
-TEST(Dominion, playUniqueActionCard) {
+TEST(Dominion, playCellar) {
     Game game;
     game.init();
 
     Player& player = game.getPlayerForTest();
     auto& deckCard = player.getDeckForTest().getCardsForTest();
-    deckCard.emplace(deckCard.begin(), Card::Type::Chapel);
-    EXPECT_EQ(Card::Type::Chapel, game.getPlayerForTest().getDeckForTest().getCardsForTest().at(0));
+    auto& hand = player.getHandForTest();
+    auto& handCard = hand.getCardsForTest();
+    deckCard.clear();
+    deckCard.insert(deckCard.end(), {Card::Type::Cellar, Card::Type::Chapel});
+    deckCard.insert(deckCard.end(), {Card::Type::Copper, Card::Type::Silver, Card::Type::Gold});
+    deckCard.insert(deckCard.end(), {Card::Type::Village, Card::Type::Smithy});
+    deckCard.insert(deckCard.end(), {Card::Type::Estate, Card::Type::Duchy, Card::Type::Province});
+
     EXPECT_EQ(RetCode::Success, game.draw(5));
+
     game.setTestInput({1, 2});
+    EXPECT_EQ(Card::Type::Cellar, handCard.at(0));
     game.play(0);
 
-    EXPECT_EQ(2, player.getHandForTest().getSize());
+    game.print();
+    EXPECT_EQ(4, hand.getSize()) << "play cellar : -1, discard : -2, draw : +2 = 4";
+
+    EXPECT_EQ((std::vector<Card::Type>{Card::Type::Silver, Card::Type::Gold, Card::Type::Village, Card::Type::Smithy}), handCard) << "deck's or hand's card is not match";
+}
+
+TEST(Dominion, playChapel) {
+    Game game;
+    game.init();
+
+    Player& player = game.getPlayerForTest();
+    auto& deckCard = player.getDeckForTest().getCardsForTest();
+    auto& hand = player.getHandForTest();
+    auto& handCard = hand.getCardsForTest();
+    deckCard.clear();
+    deckCard.insert(deckCard.end(), {Card::Type::Chapel, Card::Type::Cellar});
+    deckCard.insert(deckCard.end(), {Card::Type::Copper, Card::Type::Silver, Card::Type::Gold});
+    deckCard.insert(deckCard.end(), {Card::Type::Village, Card::Type::Smithy});
+    deckCard.insert(deckCard.end(), {Card::Type::Estate, Card::Type::Duchy, Card::Type::Province});
+
+    EXPECT_EQ(RetCode::Success, game.draw(5));
+
+    game.setTestInput({1, 2});
+    EXPECT_EQ(Card::Type::Chapel, handCard.at(0));
+    game.play(0);
+
+    game.print();
+
+    EXPECT_EQ(2, hand.getSize()) << "play chapel : -1, trash : -2";
+
+    EXPECT_EQ((std::vector<Card::Type>{Card::Type::Silver, Card::Type::Gold}), handCard) << "hand's card is not match";
 }

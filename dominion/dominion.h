@@ -148,6 +148,7 @@ class CardPile {
 public:
     void addCard(Card::Type card);
     Card::Type takeCard(int index);
+    Card::Type getCard(int index) const;
     int getSize() const;
     virtual void print() const;
     void shuffle();
