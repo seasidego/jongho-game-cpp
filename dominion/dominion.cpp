@@ -6,6 +6,8 @@
 #include <vector>
 #include <string>
 #include <sstream>
+#include <cassert>
+#include <format>
 
 void printLine() {
     std::cout << "-------------------" << std::endl;
@@ -86,12 +88,8 @@ RetCode Chapel::play(Player& player, Game& game) const {
         return retCode;
     }
     player.getHand().print();
-    auto indexes = game.inputHandIndex(4);
-    // if indexes is not sorted, and when index 1 is trashed and index 3 need to trashed,
-    // index 3 will not be the index 3 in first cardpile
-    std::sort(indexes.begin(), indexes.end(), [](const auto& a, const auto& b){
-        return a > b;
-    });
+    std::cout << std::format("Trash up to {} cards from your hand. >\n", trashCardAmount);
+    auto indexes = game.inputHandIndex(trashCardAmount);
 
     for (const auto index : indexes) {
         if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
@@ -114,12 +112,9 @@ RetCode Cellar::play(Player& player, Game& game) const {
 
     int index = 0;
     Card::Type card;
+    std::cout << std::format("Discard any number of cards. +1 Card pear card discarded. >\n");
     auto indexes = game.inputHandIndex(player.getHand().getSize());
     int cardDraw = 0;
-
-    std::sort(indexes.begin(), indexes.end(), [](const auto& a, const auto& b){
-        return a > b;
-    });
 
     for (const auto& i : indexes) {
         player.addCardDiscard(player.takeCardFromHand(i));
@@ -127,6 +122,36 @@ RetCode Cellar::play(Player& player, Game& game) const {
     }
 
     player.draw(cardDraw);
+    return RetCode::Success;
+}
+
+RetCode Moneylender::play(Player& player, Game& game) const {
+    auto retCode = Card::play(player, game);
+    if (retCode != RetCode::Success) {
+        return retCode;
+    }
+
+    player.getHand().print();
+    int index = 0;
+    Card::Type card;
+
+    while (true) {
+        std::cout << std::format("You may trash a Copper from you hand for +{} coins >\n", coinAmount);
+        auto indexes = game.inputHandIndex(1);
+        if (indexes.size() > 0) {
+            index = indexes[0];
+            if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
+                return RetCode::UserDontWant;
+            }
+            if (player.getHand().getCard(index) == Card::Type::Copper) {
+                break;
+            }
+        }
+    }
+
+    game.trashCardFromHand(index);
+    player.addState(TurnState::Coin, coinAmount);
+
     return RetCode::Success;
 }
 
@@ -579,7 +604,7 @@ void CardRegistry::initCards() {
     );
     cards_.emplace(
         Card::Type::Moneylender,
-        std::make_unique<Card>(
+        std::make_unique<Moneylender>(
             Card::Type::Moneylender, "Moneylender", 4,
             std::vector<Card::Category>{Card::Category::Action},
             std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
@@ -871,7 +896,18 @@ std::vector<std::string> Game::splitString(std::string s) {
 
 std::vector<int> Game::inputHandIndex(int amount) const {
     if (isTest_) {
-        return inputTest_;
+        // if indexes is not sorted, and when index 1 is trashed and index 3 need to trashed,
+        // index 3 will not be the index 3 in first cardpile
+        auto inputTest = inputTest_;
+        std::sort(inputTest.begin(), inputTest.end(), [](const auto& a, const auto& b){
+            return a > b;
+        });
+
+        assert(inputTest.size() <= amount);
+        auto it = std::adjacent_find(inputTest.begin(), inputTest.end());
+        assert(it == inputTest.end());
+
+        return inputTest;
     }
 
     std::string select;
@@ -919,6 +955,11 @@ std::vector<int> Game::inputHandIndex(int amount) const {
             break;
         }
     }
+    // if indexes is not sorted, and when index 1 is trashed and index 3 need to trashed,
+    // index 3 will not be the index 3 in first cardpile
+    std::sort(selectedInt.begin(), selectedInt.end(), [](const auto& a, const auto& b){
+        return a > b;
+    });
     return selectedInt;
 }
 

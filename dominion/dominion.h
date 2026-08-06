@@ -130,6 +130,7 @@ public:
 
     RetCode play(Player& player, Game& game) const override;
 private:
+    const int trashCardAmount = 4;
 };
 
 class Cellar : public Card {
@@ -142,6 +143,19 @@ public:
 
     RetCode play(Player& player, Game& game) const override;
 private:
+};
+
+class Moneylender : public Card {
+public:
+    Moneylender(Type type, const std::string& name, int cost,
+        const std::vector<Category>& categoris,
+        const std::vector<BasicAbility>& abilitys,
+        const UniqueAbility& uniqueAbility)
+    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+
+    RetCode play(Player& player, Game& game) const override;
+private:
+    const int coinAmount = 3;
 };
 
 class CardPile {

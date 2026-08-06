@@ -135,3 +135,26 @@ TEST(Dominion, playChapel) {
 
     EXPECT_EQ((std::vector<Card::Type>{Card::Type::Silver, Card::Type::Gold}), handCard) << "hand's card is not match";
 }
+
+TEST(Dominion, playMoneylender) {
+    Game game;
+    game.init();
+
+    Player& player = game.getPlayerForTest();
+    auto& deckCard = player.getDeckForTest().getCardsForTest();
+    auto& hand = player.getHandForTest();
+    auto& handCard = hand.getCardsForTest();
+    deckCard.clear();
+    deckCard.insert(deckCard.end(), {Card::Type::Moneylender, Card::Type::Estate});
+    deckCard.insert(deckCard.end(), {Card::Type::Copper, Card::Type::Silver, Card::Type::Gold});
+
+    EXPECT_EQ(RetCode::Success, game.draw(5));
+
+    game.setTestInput({2});
+    EXPECT_EQ(Card::Type::Moneylender, handCard.at(0));
+    game.play(0);
+
+    game.print();
+
+    EXPECT_EQ(3, player.getState(TurnState::Coin));
+}
