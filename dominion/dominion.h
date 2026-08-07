@@ -158,6 +158,19 @@ private:
     const int coinAmount = 3;
 };
 
+class Workshop : public Card {
+public:
+    Workshop(Type type, const std::string& name, int cost,
+        const std::vector<Category>& categoris,
+        const std::vector<BasicAbility>& abilitys,
+        const UniqueAbility& uniqueAbility)
+    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+
+    RetCode play(Player& player, Game& game) const override;
+private:
+    const int maxCost = 4;
+};
+
 class CardPile {
 public:
     void addCard(Card::Type card);
@@ -289,8 +302,9 @@ private:
 class Game {
 public:
     static std::vector<std::string> splitString(std::string s);
-    int inputBuy();
-    RetCode buyCard(int number);
+    int inputGetFromSupply();
+    RetCode buyCard(int index);
+    RetCode gainCardByCost(int index, int maxCost);
     void resetTurnState();
     void print() const;
     void init();
@@ -300,6 +314,7 @@ public:
     RetCode nextPhase();
     std::vector<int> inputHandIndex(int amount) const;
     RetCode trashCardFromHand(int index);
+    void setTestBuyInput(int index);
     void setTestInput(const std::vector<int>& indexes);
 
 private:
@@ -324,6 +339,7 @@ private:
     CardRegistry registry_;
     bool isTest_ = false;
     std::vector<int> inputTest_;
+    int inputBuyTest_ = 0;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Card::Type& type) {

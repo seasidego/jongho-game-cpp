@@ -155,6 +155,24 @@ RetCode Moneylender::play(Player& player, Game& game) const {
     return RetCode::Success;
 }
 
+RetCode Workshop::play(Player& player, Game& game) const {
+    auto retCode = Card::play(player, game);
+    if (retCode != RetCode::Success) {
+        return retCode;
+    }
+    std::cout << std::format("Gain a card costing up to {} >\n", maxCost);
+    while (true) {
+        int index = game.inputGetFromSupply();
+        if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
+            return RetCode::UserDontWant;
+        }
+        if (game.gainCardByCost(index, maxCost) == RetCode::Success) {
+            break;
+        }
+    }
+    return RetCode::Success;
+}
+
 void CardPile::addCard(Card::Type card) {
     cards_.emplace_back(card);
 }
@@ -613,7 +631,7 @@ void CardRegistry::initCards() {
     );
     cards_.emplace(
         Card::Type::Workshop,
-        std::make_unique<Card>(
+        std::make_unique<Workshop>(
             Card::Type::Workshop, "Workshop", 3,
             std::vector<Card::Category>{Card::Category::Action},
             std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
@@ -686,7 +704,11 @@ void CardRegistry::print() const{
     }
 }
 
-int Game::inputBuy() {
+int Game::inputGetFromSupply() {
+    if (isTest_) {
+        assert(supply_.isValid(inputBuyTest_));
+        return inputBuyTest_;
+    }
     std::string cardNumber;
     int cardInt = 0;
     supply_.printWithIndex();
@@ -711,8 +733,8 @@ int Game::inputBuy() {
     return cardInt;
 }
 
-RetCode Game::buyCard(int number) {
-    Card::Type cardType = supply_.indexToCardType(number);
+RetCode Game::buyCard(int index) {
+    Card::Type cardType = supply_.indexToCardType(index);
 
     Player* _player = getCurPlayer();
     if (_player == nullptr) {
@@ -737,6 +759,32 @@ RetCode Game::buyCard(int number) {
 
     player.addState(TurnState::Coin, -cost);
     player.addState(TurnState::Buy, -1);
+    player.addCardDiscard(cardType);
+    supply_.discard(cardType);
+
+    return RetCode::Success;
+}
+
+RetCode Game::gainCardByCost(int index, int maxCost) {
+    Card::Type cardType = supply_.indexToCardType(index);
+
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return RetCode::InvaildPlayer;
+    }
+
+    Player& player = *_player;
+
+    int cost = registry_.getInfo(cardType).getCost();
+
+    if (!supply_.checkCanBuyCard(cardType)) {
+        return RetCode::EmptySupply;
+    }
+
+    if (maxCost < cost) {
+        return RetCode::NoEnoughCoin;
+    }
+
     player.addCardDiscard(cardType);
     supply_.discard(cardType);
 
@@ -982,5 +1030,10 @@ void Game::setTestInput(const std::vector<int>& indexes) {
         inputTest_.emplace_back(i - 1);
     }
 
+    isTest_ = true;
+}
+
+void Game::setTestBuyInput(int index) {
+    inputBuyTest_ = index - 1;
     isTest_ = true;
 }
