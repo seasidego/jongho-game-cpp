@@ -946,16 +946,11 @@ std::vector<int> Game::inputHandIndex(int amount) const {
     if (isTest_) {
         // if indexes is not sorted, and when index 1 is trashed and index 3 need to trashed,
         // index 3 will not be the index 3 in first cardpile
-        auto inputTest = inputTest_;
-        std::sort(inputTest.begin(), inputTest.end(), [](const auto& a, const auto& b){
-            return a > b;
-        });
+        assert(inputTest_.size() <= amount);
+        auto it = std::adjacent_find(inputTest_.begin(), inputTest_.end());
+        assert(it == inputTest_.end());
 
-        assert(inputTest.size() <= amount);
-        auto it = std::adjacent_find(inputTest.begin(), inputTest.end());
-        assert(it == inputTest.end());
-
-        return inputTest;
+        return inputTest_;
     }
 
     std::string select;
@@ -1029,6 +1024,9 @@ void Game::setTestInput(const std::vector<int>& indexes) {
     for (const auto& i : indexes) {
         inputTest_.emplace_back(i - 1);
     }
+    std::sort(inputTest_.begin(), inputTest_.end(), [](const auto& a, const auto& b){
+        return a > b;
+    });
 
     isTest_ = true;
 }
