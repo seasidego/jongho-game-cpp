@@ -30,10 +30,6 @@ int BasicAbility::getAmount() const {
     return amount_;
 }
 
-UniqueAbility::Ability UniqueAbility::getAbility() const {
-    return ability_;
-}
-
 int Card::getCost() const{
     return cost_;
 }
@@ -54,7 +50,7 @@ void Card::print() const {
         std::cout << a.getAbility() << " ";
     }
     std::cout << std::endl;
-    std::cout << "uniqueAbility: " << uniqueAbility_.getAbility() << std::endl;
+    // std::cout << "uniqueAbility: " << uniqueAbility_.getAbility() << std::endl;
     std::cout << "categoris: ";
     for (const auto& c : categoris_) {
         std::cout << c << " ";
@@ -82,14 +78,18 @@ RetCode Card::play(Player& player, Game& game) const {
     return RetCode::Success;
 }
 
+RetCode Card::doInThisTurnAbility(Player& player, Game& game) const {
+    return RetCode::NoInThisTurnAbility;
+}
+
 RetCode Chapel::play(Player& player, Game& game) const {
     auto retCode = Card::play(player, game);
     if (retCode != RetCode::Success) {
         return retCode;
     }
     player.getHand().print();
-    std::cout << std::format("Trash up to {} cards from your hand. >\n", trashCardAmount);
-    auto indexes = game.inputHandIndex(trashCardAmount);
+    std::cout << std::format("Trash up to {} cards from your hand. >\n", trashCardAmount_);
+    auto indexes = game.inputHandIndex(trashCardAmount_);
 
     for (const auto index : indexes) {
         if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
@@ -136,7 +136,7 @@ RetCode Moneylender::play(Player& player, Game& game) const {
     Card::Type card;
 
     while (true) {
-        std::cout << std::format("You may trash a Copper from you hand for +{} coins >\n", coinAmount);
+        std::cout << std::format("You may trash a Copper from you hand for +{} coins >\n", coinAmount_);
         auto indexes = game.inputHandIndex(1);
         if (indexes.size() > 0) {
             index = indexes[0];
@@ -150,7 +150,7 @@ RetCode Moneylender::play(Player& player, Game& game) const {
     }
 
     game.trashCardFromHand(index);
-    player.addState(TurnState::Coin, coinAmount);
+    player.addState(TurnState::Coin, coinAmount_);
 
     return RetCode::Success;
 }
@@ -160,17 +160,36 @@ RetCode Workshop::play(Player& player, Game& game) const {
     if (retCode != RetCode::Success) {
         return retCode;
     }
-    std::cout << std::format("Gain a card costing up to {} >\n", maxCost);
+    std::cout << std::format("Gain a card costing up to {} >\n", maxCost_);
     while (true) {
         int index = game.inputGetFromSupply();
         if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
             return RetCode::UserDontWant;
         }
-        if (game.gainCardByCost(index, maxCost) == RetCode::Success) {
+        if (game.gainCardByCost(index, maxCost_) == RetCode::Success) {
             break;
         }
     }
     return RetCode::Success;
+}
+
+RetCode Merchant::play(Player& player, Game& game) const {
+    auto retCode = Card::play(player, game);
+    if (retCode != RetCode::Success) {
+        return retCode;
+    }
+    std::cout << std::format("The first time you play a Silver this turn. +{} coin >\n", coin_);
+    game.addInthisTurnAbility(this);
+
+    return RetCode::Success;
+}
+
+RetCode Merchant::doInThisTurnAbility(Player& player, Game& game) const {
+    if (player.playGroundContain(Card::Type::Silver)) {
+        player.addState(TurnState::Coin, coin_);
+        return RetCode::Success;
+    }
+    return RetCode::CardNotFound;
 }
 
 void CardPile::addCard(Card::Type card) {
@@ -230,6 +249,10 @@ bool CardPile::isValid(int cardIndex) const {
         return false;
     }
     return true;
+}
+
+bool CardPile::contain(Card::Type card) const {
+    return std::find(cards_.begin(), cards_.end(), card) == cards_.end() ? false : true;
 }
 
 const std::vector<Card::Type>& CardPile::getCardsForTest() const {
@@ -505,6 +528,10 @@ const Hand& Player::getHand() const {
     return hand_;
 }
 
+bool Player::playGroundContain(Card::Type card) const {
+    return playGround_.contain(card);
+}
+
 const Hand& Player::getHandForTest() const {
     return hand_;
 }
@@ -551,17 +578,14 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Copper, "Copper", 0,
             std::vector<Card::Category>{Card::Category::Treasure},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 1} },
-            UniqueAbility(UniqueAbility::Ability::None)
-        )
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 1} })
     );
     cards_.emplace(
         Card::Type::Silver,
         std::make_unique<Card>(
             Card::Type::Silver, "Silver", 3,
             std::vector<Card::Category>{Card::Category::Treasure},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 2} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 2} }
         )
     );
     cards_.emplace(
@@ -569,8 +593,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Gold, "Gold", 6,
             std::vector<Card::Category>{Card::Category::Treasure},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 2} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 2} }
         )
     );
 
@@ -579,8 +602,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Estate, "Estate", 2,
             std::vector<Card::Category>{Card::Category::Victory},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 1} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 1} }
         )
     );
     cards_.emplace(
@@ -588,8 +610,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Duchy, "Duchy", 5,
             std::vector<Card::Category>{Card::Category::Victory},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 3} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 3} }
         )
     );
     cards_.emplace(
@@ -597,8 +618,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Province, "Province", 8,
             std::vector<Card::Category>{Card::Category::Victory},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 6} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Score, 6} }
         )
     );
 
@@ -607,8 +627,7 @@ void CardRegistry::initCards() {
         std::make_unique<Chapel>(
             Card::Type::Chapel, "Chapel", 2,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
-            UniqueAbility(UniqueAbility::Ability::Chapel)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} }
         )
     );
     cards_.emplace(
@@ -616,8 +635,7 @@ void CardRegistry::initCards() {
         std::make_unique<Cellar>(
             Card::Type::Cellar, "Cellar", 2,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 1} },
-            UniqueAbility(UniqueAbility::Ability::Cellar)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 1} }
         )
     );
     cards_.emplace(
@@ -625,8 +643,7 @@ void CardRegistry::initCards() {
         std::make_unique<Moneylender>(
             Card::Type::Moneylender, "Moneylender", 4,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
-            UniqueAbility(UniqueAbility::Ability::Moneylender)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} }
         )
     );
     cards_.emplace(
@@ -634,17 +651,15 @@ void CardRegistry::initCards() {
         std::make_unique<Workshop>(
             Card::Type::Workshop, "Workshop", 3,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} },
-            UniqueAbility(UniqueAbility::Ability::Workshop)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} }
         )
     );
     cards_.emplace(
         Card::Type::Merchant,
-        std::make_unique<Card>(
+        std::make_unique<Merchant>(
             Card::Type::Merchant, "Merchant", 3,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 1}, {BasicAbility::Ability::Cards, 1} },
-            UniqueAbility(UniqueAbility::Ability::Merchant)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 1}, {BasicAbility::Ability::Cards, 1} }
         )
     );
 
@@ -653,8 +668,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Village, "Village", 3,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 1}, {BasicAbility::Ability::Action, 2} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 1}, {BasicAbility::Ability::Action, 2} }
         )
     );
     cards_.emplace(
@@ -665,8 +679,7 @@ void CardRegistry::initCards() {
             std::vector<BasicAbility>{
                 {BasicAbility::Ability::Cards, 1}, {BasicAbility::Ability::Action, 2},
                 {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 2}
-            },
-            UniqueAbility(UniqueAbility::Ability::None)
+            }
         )
     );
     cards_.emplace(
@@ -674,8 +687,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Laboratory, "Laboratory", 5,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 2}, {BasicAbility::Ability::Action, 1} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 2}, {BasicAbility::Ability::Action, 1} }
         )
     );
     cards_.emplace(
@@ -683,8 +695,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Festival, "Festival", 5,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 2}, {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 1} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 2}, {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 1} }
         )
     );
     cards_.emplace(
@@ -692,8 +703,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Smithy, "Smithy", 3,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 3} },
-            UniqueAbility(UniqueAbility::Ability::None)
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Cards, 3} }
         )
     );
 }
@@ -912,6 +922,11 @@ RetCode Game::play(int index) {
         return RetCode::CardNotFound;
     }
 
+    RetCode inThisTurnRet = doInThisTurnAbility();
+    if (inThisTurnRet != RetCode::Success) {
+        return inThisTurnRet;
+    }
+
     const auto& card = registry_.getInfo(cardType);
 
     return card.play(player, *this);
@@ -1029,6 +1044,26 @@ void Game::setTestInput(const std::vector<int>& indexes) {
     });
 
     isTest_ = true;
+}
+
+void Game::addInthisTurnAbility(const Card* cardType) {
+    inThisTurnAbility_.emplace_back(cardType);
+}
+
+RetCode Game::doInThisTurnAbility() {
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return RetCode::InvaildPlayer;
+    }
+    Player& player = *_player;
+
+    for (const auto& i : inThisTurnAbility_) {
+        RetCode ret = i->doInThisTurnAbility(player, *this);
+        if (ret != RetCode::Success && ret != RetCode::NoInThisTurnAbility) {
+            return ret;
+        }
+    }
+    return RetCode::Success;
 }
 
 void Game::setTestBuyInput(int index) {

@@ -30,6 +30,7 @@ enum class RetCode {
     DeckSuffled,
     CardNotFound,
     UserDontWant,
+    NoInThisTurnAbility,
 };
 
 class BasicAbility {
@@ -51,21 +52,21 @@ private:
     int amount_ = 0;
 };
 
-class UniqueAbility {
-public:
-    enum class Ability {
-        None,
-        Chapel,
-        Cellar,
-        Moneylender,
-        Workshop,
-        Merchant,
-    };
-    UniqueAbility(Ability ability) : ability_(ability) {};
-    Ability getAbility() const;
-private:
-    Ability ability_ = Ability::None;
-};
+// class UniqueAbility {
+// public:
+//     enum class Ability {
+//         None,
+//         Chapel,
+//         Cellar,
+//         Moneylender,
+//         Workshop,
+//         Merchant,
+//     };
+//     UniqueAbility(Ability ability) : ability_(ability) {};
+//     Ability getAbility() const;
+// private:
+//     Ability ability_ = Ability::None;
+// };
 
 class Player;
 class Game;
@@ -101,22 +102,21 @@ public:
 
     Card(Type type, const std::string& name, int cost,
         const std::vector<Category>& categoris,
-        const std::vector<BasicAbility>& abilitys,
-        const UniqueAbility& uniqueAbility)
-    : type_(type), name_(name), cost_(cost), abilitys_(abilitys), uniqueAbility_(uniqueAbility), categoris_(categoris) {};
+        const std::vector<BasicAbility>& abilitys)
+        : type_(type), name_(name), cost_(cost), abilitys_(abilitys), categoris_(categoris) {};
     int getCost() const;
     const std::vector<Category>& getCategorys() const;
     const std::vector<BasicAbility>& getAbilitys() const;
     void print() const;
 
     virtual RetCode play(Player& player, Game& game) const;
-
+    virtual RetCode doInThisTurnAbility(Player& player, Game& game) const;
 private:
     Type type_;
     std::string name_;
     int cost_ = 0;
     std::vector<BasicAbility> abilitys_;
-    UniqueAbility uniqueAbility_;
+    // UniqueAbility uniqueAbility_;
     std::vector<Category> categoris_;
 };
 
@@ -124,22 +124,20 @@ class Chapel : public Card {
 public:
     Chapel(Type type, const std::string& name, int cost,
         const std::vector<Category>& categoris,
-        const std::vector<BasicAbility>& abilitys,
-        const UniqueAbility& uniqueAbility)
-    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+        const std::vector<BasicAbility>& abilitys)
+    : Card(type, name, cost, categoris, abilitys) {};
 
     RetCode play(Player& player, Game& game) const override;
 private:
-    const int trashCardAmount = 4;
+    const int trashCardAmount_ = 4;
 };
 
 class Cellar : public Card {
 public:
     Cellar(Type type, const std::string& name, int cost,
         const std::vector<Category>& categoris,
-        const std::vector<BasicAbility>& abilitys,
-        const UniqueAbility& uniqueAbility)
-    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+        const std::vector<BasicAbility>& abilitys)
+    : Card(type, name, cost, categoris, abilitys) {};
 
     RetCode play(Player& player, Game& game) const override;
 private:
@@ -149,26 +147,37 @@ class Moneylender : public Card {
 public:
     Moneylender(Type type, const std::string& name, int cost,
         const std::vector<Category>& categoris,
-        const std::vector<BasicAbility>& abilitys,
-        const UniqueAbility& uniqueAbility)
-    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+        const std::vector<BasicAbility>& abilitys)
+    : Card(type, name, cost, categoris, abilitys) {};
 
     RetCode play(Player& player, Game& game) const override;
 private:
-    const int coinAmount = 3;
+    const int coinAmount_ = 3;
 };
 
 class Workshop : public Card {
 public:
     Workshop(Type type, const std::string& name, int cost,
         const std::vector<Category>& categoris,
-        const std::vector<BasicAbility>& abilitys,
-        const UniqueAbility& uniqueAbility)
-    : Card(type, name, cost, categoris, abilitys, uniqueAbility) {};
+        const std::vector<BasicAbility>& abilitys)
+    : Card(type, name, cost, categoris, abilitys) {};
 
     RetCode play(Player& player, Game& game) const override;
 private:
-    const int maxCost = 4;
+    const int maxCost_ = 4;
+};
+
+class Merchant : public Card {
+public:
+    Merchant(Type type, const std::string& name, int cost,
+        const std::vector<Category>& categoris,
+        const std::vector<BasicAbility>& abilitys)
+    : Card(type, name, cost, categoris, abilitys) {};
+
+    RetCode play(Player& player, Game& game) const override;
+    RetCode doInThisTurnAbility(Player& player, Game& game) const override;
+private:
+    const int coin_ = 1;
 };
 
 class CardPile {
@@ -182,6 +191,7 @@ public:
     void insert(const std::vector<Card::Type>& cards);
     std::vector<Card::Type> takeAllCards();
     bool isValid(int cardIndex) const;
+    bool contain(Card::Type card) const;
 
 public: // for test
     const std::vector<Card::Type>& getCardsForTest() const;
@@ -219,7 +229,6 @@ private:
 class Discard : public CardPile {
 public:
     void print() const override;
-
 private:
 };
 
@@ -268,6 +277,7 @@ public:
     void nextPhase();
     Card::Type takeCardFromHand(int index);
     const Hand& getHand() const;
+    bool playGroundContain(Card::Type card) const;
 
 public:
     const Hand& getHandForTest() const;
@@ -316,6 +326,8 @@ public:
     RetCode trashCardFromHand(int index);
     void setTestBuyInput(int index);
     void setTestInput(const std::vector<int>& indexes);
+    void addInthisTurnAbility(const Card* cardType);
+    RetCode doInThisTurnAbility();
 
 private:
     void setStartCard();
@@ -340,6 +352,7 @@ private:
     bool isTest_ = false;
     std::vector<int> inputTest_;
     int inputBuyTest_ = 0;
+    std::vector<const Card*> inThisTurnAbility_;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Card::Type& type) {
@@ -376,17 +389,17 @@ inline std::ostream& operator<<(std::ostream& os, const Card::Category& type) {
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const UniqueAbility::Ability& ability) {
-    switch (ability) {
-        case UniqueAbility::Ability::None: os << "None"; break;
-        case UniqueAbility::Ability::Chapel: os << "Chapel"; break;
-        case UniqueAbility::Ability::Cellar: os << "Cellar"; break;
-        case UniqueAbility::Ability::Moneylender: os << "Moneylender"; break;
-        case UniqueAbility::Ability::Workshop: os << "Workshop"; break;
-        case UniqueAbility::Ability::Merchant: os << "Merchant"; break;
-    }
-    return os;
-}
+// inline std::ostream& operator<<(std::ostream& os, const UniqueAbility::Ability& ability) {
+//     switch (ability) {
+//         case UniqueAbility::Ability::None: os << "None"; break;
+//         case UniqueAbility::Ability::Chapel: os << "Chapel"; break;
+//         case UniqueAbility::Ability::Cellar: os << "Cellar"; break;
+//         case UniqueAbility::Ability::Moneylender: os << "Moneylender"; break;
+//         case UniqueAbility::Ability::Workshop: os << "Workshop"; break;
+//         case UniqueAbility::Ability::Merchant: os << "Merchant"; break;
+//     }
+//     return os;
+// }
 
 inline std::ostream& operator<<(std::ostream& os, const BasicAbility::Ability& ability) {
     switch (ability) {

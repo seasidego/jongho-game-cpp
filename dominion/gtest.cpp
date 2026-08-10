@@ -180,3 +180,28 @@ TEST(Dominion, playWorkshop) {
 
     EXPECT_EQ(Card::Type::Moneylender, player.getDiscardForTest().getCardsForTest().at(0));
 }
+
+TEST(Dominion, playMerchant) {
+    Game game;
+    game.init();
+    Player& player = game.getPlayerForTest();
+    auto& deckCard = player.getDeckForTest().getCardsForTest();
+    auto& hand = player.getHandForTest();
+    auto& handCard = hand.getCardsForTest();
+    deckCard.clear();
+    deckCard.insert(deckCard.end(), {Card::Type::Merchant, Card::Type::Estate});
+    deckCard.insert(deckCard.end(), {Card::Type::Copper, Card::Type::Silver, Card::Type::Gold});
+    deckCard.insert(deckCard.end(), {Card::Type::Copper, Card::Type::Silver, Card::Type::Gold});
+
+    EXPECT_EQ(RetCode::Success, game.draw(5));
+
+    EXPECT_EQ(Card::Type::Merchant, handCard.at(0));
+    EXPECT_EQ(RetCode::Success, game.play(0));
+    game.nextPhase();
+    EXPECT_EQ(Card::Type::Silver, handCard.at(2));
+    EXPECT_EQ(RetCode::Success, game.play(2));
+
+    game.print();
+
+    EXPECT_EQ(3, player.getState(TurnState::Coin));
+}
