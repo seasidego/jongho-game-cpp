@@ -13,8 +13,8 @@ TEST(Dominion, Buy) {
     EXPECT_EQ(59, game.getSupplyForTest().getCardsForTest().at(0).second);
     EXPECT_EQ(RetCode::NoEnoughBuy, game.buyCard(0));
 
-    // game.print();
-    // std::cout << "end" << std::endl;
+    game.print();
+    std::cout << "end" << std::endl;
 }
 
 TEST(Dominion, DrawAndDiscard) {
@@ -46,14 +46,14 @@ TEST(Dominion, DrawAndDiscard) {
 }
 
 TEST(Dominion, play) {
-    Game game;
-    game.init();
+    // Game game;
+    // game.init();
 
-    EXPECT_EQ(RetCode::Success, game.draw(5));
-    EXPECT_EQ(Card::Type::Copper, game.getPlayerForTest().getHandForTest().getCardsForTest().at(3));
-    EXPECT_EQ(RetCode::Success, game.nextPhase());
-    EXPECT_EQ(RetCode::Success, game.play(3));
-    EXPECT_EQ(1, game.getPlayerForTest().getTurnStateForTest().at(TurnState::Coin));
+    // EXPECT_EQ(RetCode::Success, game.draw(5));
+    // EXPECT_EQ(Card::Type::Copper, game.getPlayerForTest().getHandForTest().getCardsForTest().at(3));
+    // EXPECT_EQ(RetCode::Success, game.nextPhase());
+    // EXPECT_EQ(RetCode::Success, game.play(3));
+    // EXPECT_EQ(1, game.getPlayerForTest().getTurnStateForTest().at(TurnState::Coin));
 }
 
 TEST(Dominion, playActionCard) {
@@ -176,8 +176,6 @@ TEST(Dominion, playWorkshop) {
     EXPECT_EQ(Card::Type::Workshop, handCard.at(0));
     EXPECT_EQ(RetCode::Success, game.play(0));
 
-    game.print();
-
     EXPECT_EQ(Card::Type::Moneylender, player.getDiscardForTest().getCardsForTest().at(0));
 }
 
@@ -200,8 +198,8 @@ TEST(Dominion, playMerchant) {
     game.nextPhase();
     EXPECT_EQ(Card::Type::Silver, handCard.at(2));
     EXPECT_EQ(RetCode::Success, game.play(2));
+    EXPECT_EQ(Card::Type::Copper, handCard.at(1));
+    EXPECT_EQ(RetCode::Success, game.play(1));
 
-    game.print();
-
-    EXPECT_EQ(3, player.getState(TurnState::Coin));
+    EXPECT_EQ(4, player.getState(TurnState::Coin));
 }

@@ -6,7 +6,7 @@
 #include <map>
 #include <random>
 #include <set>
-#include <gtest/gtest_prod.h>
+// #include <gtest/gtest_prod.h>
 
 enum class TurnState {
     None,
@@ -18,6 +18,7 @@ enum class TurnState {
 enum class RetCode {
     Success,
     NoEnoughBuy,
+    NoEnoughAction,
     NoEnoughCoin,
     EmptyDeck,
     EmptySupply,
@@ -31,6 +32,11 @@ enum class RetCode {
     CardNotFound,
     UserDontWant,
     NoInThisTurnAbility,
+    InputError,
+    UserStopPhase,
+    CardNotMatchWithPhase,
+    EndPlayTreasure,
+    MissMatchConditionInThisTurnAbility,
 };
 
 class BasicAbility {
@@ -107,10 +113,11 @@ public:
     int getCost() const;
     const std::vector<Category>& getCategorys() const;
     const std::vector<BasicAbility>& getAbilitys() const;
+    int getScore() const;
     void print() const;
 
     virtual RetCode play(Player& player, Game& game) const;
-    virtual RetCode doInThisTurnAbility(Player& player, Game& game) const;
+    virtual std::pair<RetCode, bool> doInThisTurnAbility(Player& player, Game& game) const;
 private:
     Type type_;
     std::string name_;
@@ -175,10 +182,12 @@ public:
     : Card(type, name, cost, categoris, abilitys) {};
 
     RetCode play(Player& player, Game& game) const override;
-    RetCode doInThisTurnAbility(Player& player, Game& game) const override;
+    std::pair<RetCode, bool> doInThisTurnAbility(Player& player, Game& game) const override;
 private:
     const int coin_ = 1;
 };
+
+class CardRegistry;
 
 class CardPile {
 public:
@@ -192,6 +201,7 @@ public:
     std::vector<Card::Type> takeAllCards();
     bool isValid(int cardIndex) const;
     bool contain(Card::Type card) const;
+    int calculateScore(const CardRegistry& r) const;
 
 public: // for test
     const std::vector<Card::Type>& getCardsForTest() const;
@@ -208,7 +218,7 @@ public:
     bool checkCanBuyCard(Card::Type card) const;
     RetCode discard(Card::Type card);
     void print() const;
-    void printWithIndex() const;
+    void printWithIndex(const CardRegistry& r) const;
     bool isValid(int cardNubmer) const;
     Card::Type indexToCardType(int cardIndex) const;
     int cardTypeToIndex(Card::Type cardType) const;
@@ -255,8 +265,6 @@ public:
 private:
 };
 
-class CardRegistry;
-
 class Player {
 public:
     enum class PlayPhase {
@@ -271,13 +279,19 @@ public:
     void addState(TurnState state, int amount);
     void print() const;
     void printHand() const;
+    void printState() const;
     RetCode draw(int amount);
     void discardAll();
-    Card::Type play(int index, const CardRegistry& registry);
+    std::pair<Card::Type, RetCode> play(int index, const CardRegistry& registry);
     void nextPhase();
     Card::Type takeCardFromHand(int index);
     const Hand& getHand() const;
     bool playGroundContain(Card::Type card) const;
+    Player::PlayPhase getCurrentPhase() const;
+    int getScore() const;
+    int getTurnNumber() const;
+    void addTurnNumber();
+    int calculateScore(const CardRegistry& r);
 
 public:
     const Hand& getHandForTest() const;
@@ -296,6 +310,8 @@ private:
     Discard discard_;
     std::map<TurnState, int> turnState_;
     PlayPhase currentPhase_;
+    int score_ = 0;
+    int turnNumber_ = 0;
 };
 
 class CardRegistry {
@@ -312,22 +328,31 @@ private:
 class Game {
 public:
     static std::vector<std::string> splitString(std::string s);
-    int inputGetFromSupply();
+    std::pair<int, bool> inputGetFromSupply(bool isGain);
     RetCode buyCard(int index);
     RetCode gainCardByCost(int index, int maxCost);
     void resetTurnState();
     void print() const;
+    void printHand() const;
     void init();
     RetCode draw(int amount);
     RetCode discardAll();
     RetCode play(int index);
     RetCode nextPhase();
-    std::vector<int> inputHandIndex(int amount) const;
+    std::pair<std::vector<int>, bool> inputHandIndex(int amount) const;
     RetCode trashCardFromHand(int index);
+    RetCode inputPlayCard();
+    RetCode inputBuyCard();
     void setTestBuyInput(int index);
+    void coutRetCode(RetCode ret);
     void setTestInput(const std::vector<int>& indexes);
     void addInthisTurnAbility(const Card* cardType);
     RetCode doInThisTurnAbility();
+    bool checkIsOver();
+    int calculateScore();
+    void addTurnNumber();
+    void printState() const;
+    void clearInThisTurnAbility();
 
 private:
     void setStartCard();
@@ -352,8 +377,10 @@ private:
     bool isTest_ = false;
     std::vector<int> inputTest_;
     int inputBuyTest_ = 0;
-    std::vector<const Card*> inThisTurnAbility_;
+    std::vector<std::pair<const Card*, bool>> inThisTurnAbility_; // std::vector<std::pair<const Card*, is earse>>
+    const int goalScore_ = 8;
 };
+
 
 inline std::ostream& operator<<(std::ostream& os, const Card::Type& type) {
     switch (type) {

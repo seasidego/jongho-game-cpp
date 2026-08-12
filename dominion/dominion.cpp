@@ -1,8 +1,10 @@
 #include "dominion.h"
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <string>
 #include <sstream>
@@ -42,6 +44,15 @@ const std::vector<BasicAbility>& Card::getAbilitys() const {
     return abilitys_;
 }
 
+int Card::getScore() const {
+    for (const auto& a : abilitys_) {
+        if (a.getAbility() == BasicAbility::Ability::Score) {
+            return a.getAmount();
+        }
+    }
+    return 0;
+}
+
 void Card::print() const {
     std::cout << "name: " << name_ << std::endl;
     std::cout << "cost: " << cost_ << std::endl;
@@ -78,8 +89,8 @@ RetCode Card::play(Player& player, Game& game) const {
     return RetCode::Success;
 }
 
-RetCode Card::doInThisTurnAbility(Player& player, Game& game) const {
-    return RetCode::NoInThisTurnAbility;
+std::pair<RetCode, bool> Card::doInThisTurnAbility(Player& player, Game& game) const {
+    return std::make_pair(RetCode::NoInThisTurnAbility, true);
 }
 
 RetCode Chapel::play(Player& player, Game& game) const {
@@ -89,7 +100,7 @@ RetCode Chapel::play(Player& player, Game& game) const {
     }
     player.getHand().print();
     std::cout << std::format("Trash up to {} cards from your hand. >\n", trashCardAmount_);
-    auto indexes = game.inputHandIndex(trashCardAmount_);
+    auto [indexes, isStop] = game.inputHandIndex(trashCardAmount_);
 
     for (const auto index : indexes) {
         if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
@@ -113,7 +124,7 @@ RetCode Cellar::play(Player& player, Game& game) const {
     int index = 0;
     Card::Type card;
     std::cout << std::format("Discard any number of cards. +1 Card pear card discarded. >\n");
-    auto indexes = game.inputHandIndex(player.getHand().getSize());
+    auto [indexes, isStop] = game.inputHandIndex(player.getHand().getSize());
     int cardDraw = 0;
 
     for (const auto& i : indexes) {
@@ -137,10 +148,11 @@ RetCode Moneylender::play(Player& player, Game& game) const {
 
     while (true) {
         std::cout << std::format("You may trash a Copper from you hand for +{} coins >\n", coinAmount_);
-        auto indexes = game.inputHandIndex(1);
+        auto [indexes, isStop] = game.inputHandIndex(1);
+
         if (indexes.size() > 0) {
             index = indexes[0];
-            if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
+            if (isStop) { // dis -1 to change one base to zero base. so it has to be -1
                 return RetCode::UserDontWant;
             }
             if (player.getHand().getCard(index) == Card::Type::Copper) {
@@ -162,13 +174,14 @@ RetCode Workshop::play(Player& player, Game& game) const {
     }
     std::cout << std::format("Gain a card costing up to {} >\n", maxCost_);
     while (true) {
-        int index = game.inputGetFromSupply();
-        if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
+        auto [index, isStop] = game.inputGetFromSupply(true);
+        if (isStop) { // dis -1 to change one base to zero base. so it has to be -1
             return RetCode::UserDontWant;
         }
         if (game.gainCardByCost(index, maxCost_) == RetCode::Success) {
             break;
         }
+        std::cout << "card cost not match" << std::endl;
     }
     return RetCode::Success;
 }
@@ -178,18 +191,18 @@ RetCode Merchant::play(Player& player, Game& game) const {
     if (retCode != RetCode::Success) {
         return retCode;
     }
-    std::cout << std::format("The first time you play a Silver this turn. +{} coin >\n", coin_);
+    std::cout << std::format("The first time you play a Silver this turn. +{} coin.\n", coin_);
     game.addInthisTurnAbility(this);
 
     return RetCode::Success;
 }
 
-RetCode Merchant::doInThisTurnAbility(Player& player, Game& game) const {
+std::pair<RetCode, bool> Merchant::doInThisTurnAbility(Player& player, Game& game) const {
     if (player.playGroundContain(Card::Type::Silver)) {
         player.addState(TurnState::Coin, coin_);
-        return RetCode::Success;
+        return std::make_pair(RetCode::Success, true);
     }
-    return RetCode::CardNotFound;
+    return std::make_pair(RetCode::MissMatchConditionInThisTurnAbility, false);
 }
 
 void CardPile::addCard(Card::Type card) {
@@ -255,6 +268,18 @@ bool CardPile::contain(Card::Type card) const {
     return std::find(cards_.begin(), cards_.end(), card) == cards_.end() ? false : true;
 }
 
+int CardPile::calculateScore(const CardRegistry& r) const {
+    int score = 0;
+    for (const auto& c : cards_) {
+        auto card = r.getInfo(c);
+        auto categorys = card.getCategorys();
+        if (std::find(categorys.begin(), categorys.end(), Card::Category::Victory) != categorys.end()) {
+            score += card.getScore();
+        }
+    }
+    return score;
+}
+
 const std::vector<Card::Type>& CardPile::getCardsForTest() const {
     return cards_;
 }
@@ -264,13 +289,7 @@ std::vector<Card::Type>& CardPile::getCardsForTest() {
 }
 
 void Deck::setStartCard() {
-    for (int i = 0; i < 1; i++) {
-        cards_.emplace_back(Card::Type::Estate);
-    }
-    for (int i = 0; i < 1; i++) {
-        cards_.emplace_back(Card::Type::Copper);
-    }
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 3; i++) {
         cards_.emplace_back(Card::Type::Estate);
     }
     for (int i = 0; i < 7; i++) {
@@ -295,8 +314,11 @@ void Deck::print() const {
 
 void Hand::print() const {
     std::cout << "Hand: " << std::endl;
+    int index = 1;
     for (const auto& c : cards_) {
+        std::cout << index << ": ";
         std::cout << c << std::endl;
+        index++;
     }
     printLine();
 }
@@ -326,11 +348,11 @@ RetCode Supply::discard(Card::Type card) {
     return RetCode::Success;
 }
 
-void Supply::printWithIndex() const {
+void Supply::printWithIndex(const CardRegistry& r) const {
     std::cout << "Supply: " << std::endl;
-    int index = 0;
+    int index = 1;
     for (const auto& c : cards_) {
-        std::cout << index << ": " << c.first << " : " << c.second << std::endl;
+        std::cout << index << ": " << c.first << "(" << r.getInfo(c.first).getCost() << ")" << " : " << c.second << std::endl;
         index++;
     }
     printLine();
@@ -415,6 +437,7 @@ void PlayGround::print() const {
 }
 
 void Player::print() const {
+    printLine();
     std::cout << "Player" << std::endl;
     printLine();
     deck_.print();
@@ -431,8 +454,16 @@ void Player::printHand() const {
     hand_.print();
 }
 
+void Player::printState() const {
+    std::cout << "States: " << std::endl;
+    for (const auto& t : turnState_) {
+        std::cout << t.first << " : " << t.second << std::endl;
+    }
+}
+
 void Player::setStartCard() {
     deck_.setStartCard();
+    deck_.shuffle();
 }
 
 int Player::getState(TurnState state) const {
@@ -467,15 +498,15 @@ RetCode Player::draw(int amount) {
         return RetCode::EmptyDiscardAndDeck;
     }
 
-    if (discard_.getSize() > 0 && deck_.getSize() == 0) {
-        discard_.shuffle();
-        deck_.insert(discard_.takeAllCards());
-        shuffle = true;
-    }
-
     for (int i = 0; i < amount; i++) {
+        if (discard_.getSize() > 0 && deck_.getSize() == 0) {
+            discard_.shuffle();
+            deck_.insert(discard_.takeAllCards());
+            shuffle = true;
+        }
         hand_.addCard(deck_.takeCard(0));
     }
+    
     if (shuffle) {
         return RetCode::DeckSuffled;
     }
@@ -487,30 +518,38 @@ void Player::discardAll() {
     for (int i = 0; i < size; i++) {
         discard_.addCard(hand_.takeCard(0)) ;
     }
+
+    size = playGround_.getSize();
+    for (int i = 0; i < size; i++) {
+        discard_.addCard(playGround_.takeCard(0)) ;
+    }
 }
 
-Card::Type Player::play(int index, const CardRegistry& registry) {
+std::pair<Card::Type, RetCode> Player::play(int index, const CardRegistry& registry) {
     Card::Type cardType = hand_.getCard(index);
     if (cardType == Card::Type::None) {
-        return Card::Type::None;
+        return std::make_pair(Card::Type::None, RetCode::CardNotFound);
     }
 
     const auto& category = registry.getInfo(cardType).getCategorys();
     if (currentPhase_ == PlayPhase::Action) {
-        if (std::find(category.begin(), category.end(), Card::Category::Action) == category.end() || turnState_.at(TurnState::Action) <= 0) {
-            return Card::Type::None;
+        if (std::find(category.begin(), category.end(), Card::Category::Action) == category.end()) {
+            return std::make_pair(Card::Type::None, RetCode::CardNotMatchWithPhase);
+        }
+        if (turnState_.at(TurnState::Action) <= 0) {
+            return std::make_pair(Card::Type::None, RetCode::NoEnoughAction);
         }
         addState(TurnState::Action, -1);
     }
     else if (currentPhase_ == PlayPhase::Buy) {
         if (std::find(category.begin(), category.end(), Card::Category::Treasure) == category.end()) {
-            return Card::Type::None;
+            return std::make_pair(Card::Type::None, RetCode::CardNotMatchWithPhase);
         }
     }
 
     cardType = hand_.takeCard(index);
     playGround_.addCard(cardType);
-    return cardType;
+    return std::make_pair(cardType, RetCode::Success);
 }
 
 void Player::nextPhase() {
@@ -530,6 +569,30 @@ const Hand& Player::getHand() const {
 
 bool Player::playGroundContain(Card::Type card) const {
     return playGround_.contain(card);
+}
+
+Player::PlayPhase Player::getCurrentPhase() const {
+    return currentPhase_;
+}
+
+int Player::getScore() const {
+    return score_;
+}
+
+int Player::getTurnNumber() const {
+    return turnNumber_;
+}
+
+void Player::addTurnNumber() {
+    turnNumber_++;
+}
+
+int Player::calculateScore(const CardRegistry& r) {
+    int score = 0;
+    score += deck_.calculateScore(r);
+    score += discard_.calculateScore(r);
+    score_ = score;
+    return score;
 }
 
 const Hand& Player::getHandForTest() const {
@@ -593,7 +656,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Gold, "Gold", 6,
             std::vector<Card::Category>{Card::Category::Treasure},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 2} }
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Coin, 3} }
         )
     );
 
@@ -654,6 +717,7 @@ void CardRegistry::initCards() {
             std::vector<BasicAbility>{ {BasicAbility::Ability::None, 0} }
         )
     );
+
     cards_.emplace(
         Card::Type::Merchant,
         std::make_unique<Merchant>(
@@ -677,8 +741,8 @@ void CardRegistry::initCards() {
             Card::Type::Market, "Market", 5,
             std::vector<Card::Category>{Card::Category::Action},
             std::vector<BasicAbility>{
-                {BasicAbility::Ability::Cards, 1}, {BasicAbility::Ability::Action, 2},
-                {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 2}
+                {BasicAbility::Ability::Cards, 1}, {BasicAbility::Ability::Action, 1},
+                {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 1}
             }
         )
     );
@@ -695,7 +759,7 @@ void CardRegistry::initCards() {
         std::make_unique<Card>(
             Card::Type::Festival, "Festival", 5,
             std::vector<Card::Category>{Card::Category::Action},
-            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 2}, {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 1} }
+            std::vector<BasicAbility>{ {BasicAbility::Ability::Action, 2}, {BasicAbility::Ability::Buy, 1}, {BasicAbility::Ability::Coin, 2} }
         )
     );
     cards_.emplace(
@@ -714,14 +778,24 @@ void CardRegistry::print() const{
     }
 }
 
-int Game::inputGetFromSupply() {
+std::pair<int, bool> Game::inputGetFromSupply(bool isGain) {
     if (isTest_) {
         assert(supply_.isValid(inputBuyTest_));
-        return inputBuyTest_;
+        return std::make_pair(inputBuyTest_, false) ;
     }
     std::string cardNumber;
     int cardInt = 0;
-    supply_.printWithIndex();
+    bool isStop = false;
+    supply_.printWithIndex(registry_);
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return {};
+    }
+    Player& player = *_player;
+    if (!isGain) {
+        player.printState();
+    }
+
     std::cout << "enter number" << std::endl;
     while (true) {
         std::cin >> cardNumber;
@@ -734,13 +808,18 @@ int Game::inputGetFromSupply() {
         }
 
         cardInt--;  // user input int is 1 base. card pile is zero base.
+        if (cardInt == -1) {
+            isStop = true;
+            break;
+        }
+
         if (!supply_.isValid(cardInt)) {
-            std::cout << "enter number(1~17)" << std::endl;
+            std::cout << "enter number(0~17, zero means stop buying)" << std::endl;
             continue;
         }
         break;
     }
-    return cardInt;
+    return std::make_pair(cardInt, isStop);
 }
 
 RetCode Game::buyCard(int index) {
@@ -797,6 +876,7 @@ RetCode Game::gainCardByCost(int index, int maxCost) {
 
     player.addCardDiscard(cardType);
     supply_.discard(cardType);
+    supply_.printWithIndex(registry_);
 
     return RetCode::Success;
 }
@@ -822,14 +902,20 @@ void Game::initSupply() {
 }
 
 void Game::print() const {
-    std::cout << "Game: " << std::endl;
     printLine();
+    std::cout << "Game: " << std::endl;
     supply_.print();
     trash_.print();
     for (const auto& p : players_) {
         p.print();
     }
     // registry_.print();
+}
+
+void Game::printHand() const {
+    for (const auto& p : players_) {
+        p.getHand().print();
+    }
 }
 
 void Game::addPlayer() {
@@ -917,7 +1003,10 @@ RetCode Game::play(int index) {
     }
     Player& player = *_player;
 
-    auto cardType = player.play(index, registry_);
+    auto [cardType, ret] = player.play(index, registry_);
+    if (ret != RetCode::Success) {
+        return ret;
+    }
     if (cardType == Card::Type::None) {
         return RetCode::CardNotFound;
     }
@@ -941,7 +1030,6 @@ RetCode Game::nextPhase() {
 
     player.nextPhase();
     return RetCode::Success;
-
 }
 
 std::vector<std::string> Game::splitString(std::string s) {
@@ -957,7 +1045,7 @@ std::vector<std::string> Game::splitString(std::string s) {
     return words;
  }
 
-std::vector<int> Game::inputHandIndex(int amount) const {
+std::pair<std::vector<int>, bool> Game::inputHandIndex(int amount) const {
     if (isTest_) {
         // if indexes is not sorted, and when index 1 is trashed and index 3 need to trashed,
         // index 3 will not be the index 3 in first cardpile
@@ -965,9 +1053,10 @@ std::vector<int> Game::inputHandIndex(int amount) const {
         auto it = std::adjacent_find(inputTest_.begin(), inputTest_.end());
         assert(it == inputTest_.end());
 
-        return inputTest_;
+        return std::make_pair(inputTest_, false);
     }
 
+    bool isStop = false;
     std::string select;
     std::vector<int> selectedInt;
 
@@ -976,6 +1065,7 @@ std::vector<int> Game::inputHandIndex(int amount) const {
         return {};
     }
     const Player& player = *_player;
+    printHand();
 
     std::cout << "select indexes of the cards. if you want to stop selecting, enter 0 and press enter" << std::endl;
     bool wrong = false;
@@ -996,8 +1086,8 @@ std::vector<int> Game::inputHandIndex(int amount) const {
                 wrong = true;
                 break;
             }
-            if (number > player.getHand().getSize()) {
-                std::cout << "input went wrong. you can only use 1 ~ " << player.getHand().getSize() << std::endl;
+            if (number >= player.getHand().getSize() || number < -1) {
+                std::cout << "input went wrong. you can only use 0 ~ " << player.getHand().getSize() << "zero means stop playing" << std::endl;
                 wrong = true;
                 break;
             }
@@ -1005,6 +1095,9 @@ std::vector<int> Game::inputHandIndex(int amount) const {
                 std::cout << "you can't input same number" << std::endl;
                 wrong = true;
                 break;
+            }
+            if (number == -1) {
+                isStop = true;
             }
             selectedInt.emplace_back(number);
         }
@@ -1018,7 +1111,7 @@ std::vector<int> Game::inputHandIndex(int amount) const {
     std::sort(selectedInt.begin(), selectedInt.end(), [](const auto& a, const auto& b){
         return a > b;
     });
-    return selectedInt;
+    return std::make_pair(selectedInt, isStop);
 }
 
 RetCode Game::trashCardFromHand(int index) {
@@ -1035,6 +1128,35 @@ RetCode Game::trashCardFromHand(int index) {
     return RetCode::Success;
 }
 
+RetCode Game::inputPlayCard() {
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return RetCode::InvaildPlayer;
+    }
+    Player& player = *_player;
+
+    auto [indexes, isStop] = inputHandIndex(1);
+    if (isStop) {
+        if (player.getCurrentPhase() == Player::PlayPhase::Buy) {
+            return RetCode::EndPlayTreasure;
+        }
+        return RetCode::UserStopPhase;
+    }
+    if (indexes.size() > 1 || indexes.size() <= 0) {
+        return RetCode::InputError;
+    }
+    return play(indexes[0]);
+}
+
+RetCode Game::inputBuyCard() {
+    auto [index, isStop] = inputGetFromSupply(false);
+    if (isStop) {
+        return RetCode::UserStopPhase;
+    }
+    return buyCard(index);
+}
+
+
 void Game::setTestInput(const std::vector<int>& indexes) {
     for (const auto& i : indexes) {
         inputTest_.emplace_back(i - 1);
@@ -1047,7 +1169,7 @@ void Game::setTestInput(const std::vector<int>& indexes) {
 }
 
 void Game::addInthisTurnAbility(const Card* cardType) {
-    inThisTurnAbility_.emplace_back(cardType);
+    inThisTurnAbility_.emplace_back(cardType, false);
 }
 
 RetCode Game::doInThisTurnAbility() {
@@ -1057,16 +1179,140 @@ RetCode Game::doInThisTurnAbility() {
     }
     Player& player = *_player;
 
-    for (const auto& i : inThisTurnAbility_) {
-        RetCode ret = i->doInThisTurnAbility(player, *this);
-        if (ret != RetCode::Success && ret != RetCode::NoInThisTurnAbility) {
-            return ret;
+    for (auto& i : inThisTurnAbility_) {
+        auto[ret, isErase] = i.first->doInThisTurnAbility(player, *this);
+        if (isErase) {
+            i.second = true;
+        }
+        switch (ret) {
+            case RetCode::InvaildPlayer :
+                return ret;
+            default:
+                break;
         }
     }
+
+    // erase if in this turn ability need to be erased
+    // if don't do this, then abiliys will overlap
+    std::erase_if(inThisTurnAbility_, [](const auto& i) {
+        return i.second;
+    });
+    
     return RetCode::Success;
 }
 
 void Game::setTestBuyInput(int index) {
     inputBuyTest_ = index - 1;
     isTest_ = true;
+}
+
+void Game::coutRetCode(RetCode ret) {
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        std::cout << "player is not vaild";
+    }
+    Player& player = *_player;
+
+    switch (ret) {
+        case RetCode::UserStopPhase :
+            if (player.getCurrentPhase() == Player::PlayPhase::Action) {
+                std::cout << "Action phase is over" << std::endl;
+                std::cout << "======================" << std::endl;
+                std::cout << "Play Treasure Start" << std::endl;
+                std::cout << "======================" << std::endl;
+            }
+            else if (player.getCurrentPhase() == Player::PlayPhase::Buy) {
+                std::cout << "Buy phase is over." << std::endl;
+                std::cout << "======================" << std::endl;
+                std::cout << "Action phase Start" << std::endl;
+                std::cout << "======================" << std::endl;
+            }
+            else {
+                std::cout << "Unknown phase";
+                assert(false);
+            }
+            break;
+
+        case RetCode::Success :
+            break;
+        case RetCode::CardNotFound :
+            std::cout << "Can't find card." << std::endl;
+            break;
+        case RetCode::NoEnoughAction :
+            std::cout << "Don't have enough action." << std::endl;
+            break;
+        case RetCode::NoEnoughCoin :
+            std::cout << "Don't have enough coin." << std::endl;
+            break;
+        case RetCode::NoEnoughBuy :
+            std::cout << "Don't have enough buy." << std::endl;
+            break;
+        case RetCode::CardNotMatchWithPhase :
+            if (player.getCurrentPhase() == Player::PlayPhase::Action) {
+                std::cout << "This card is not action card." << std::endl;
+            }
+            else if (player.getCurrentPhase() == Player::PlayPhase::Buy) {
+                std::cout << "This card is not treasure card." << std::endl;
+            }
+            else {
+                std::cout << "Unknown phase";
+                assert(false);
+            }
+            break;
+        case RetCode::EndPlayTreasure :
+            std::cout << "Play treasuere is over." << std::endl;
+            std::cout << "======================" << std::endl;
+            std::cout << "Buy phase Start" << std::endl;
+            std::cout << "======================" << std::endl;
+            break;
+        default :
+            break;
+    }
+    printLine();
+}
+
+void Game::printState() const {
+    const Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return;
+    }
+    const Player& player = *_player;
+
+    player.printState();
+}
+
+bool Game::checkIsOver() {
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return false;
+    }
+    Player& player = *_player;
+    if (calculateScore() >= goalScore_) {
+        std::cout << "turn: " << player.getTurnNumber() << std::endl;
+        std::cout << "score: " << player.getScore() << std::endl;
+        return true;
+    }
+    return false;
+}
+
+int Game::calculateScore() {
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return 0;
+    }
+    Player& player = *_player;
+    return player.calculateScore(registry_);
+}
+
+void Game::addTurnNumber() {
+    Player* _player = getCurPlayer();
+    if (_player == nullptr) {
+        return;
+    }
+    Player& player = *_player;
+    player.addTurnNumber();
+}
+
+void Game::clearInThisTurnAbility() {
+    inThisTurnAbility_.clear();
 }
