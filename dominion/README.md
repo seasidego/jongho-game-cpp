@@ -38,6 +38,11 @@ One of the major learning milestones in this project was moving from naive, prot
 - Realized the importance of scalability; designing the structure beforehand saved significant development time during late-game additions.
 - Learned how to apply OOP principles (Inheritance, Encapsulation, Polymorphism) to solve real-world logic problems.
 
+### 🧪 Automated Testing (GoogleTest)
+- Implemented robust unit tests using **GoogleTest** to validate complex turn-based game logic and state transitions.
+- **Card Mechanics Verification**: Designed test cases to ensure individual card actions (e.g., Draw +X, Action +X, Buy +X) and complex interactions of Action cards execute correctly according to Dominion rules.
+- **Phase Management Testing**: Validated seamless state changes between game phases (Action Phase → Buy Phase → Clean-up Phase), ensuring player hands, deck structures, and resource counters reset precisely as intended.
+
 ---
 
 ## 🛠️ Tech Stack & Environment
@@ -86,3 +91,64 @@ One of the major learning milestones in this project was moving from naive, prot
 ## ⚙️ Next Steps
 - Add more comments.
 - Split code into header (.h) and source (.cpp) files.
+
+## Execution Result
+
+```
+-------------------
+Hand: 
+1: Copper
+2: Smithy
+3: Smithy
+4: Copper
+5: Market
+-------------------
+select indexes of the cards. if you want to stop selecting, enter 0 and press enter
+5
+-------------------
+States: 
+Coin : 1
+Buy : 2
+Action : 1
+
+... 
+
+States: 
+Coin : 9
+Buy : 4
+Action : 3
+enter number
+6
+-------------------
+Supply: 
+1: Copper(0) : 60
+2: Silver(3) : 40
+3: Gold(6) : 30
+4: Estate(2) : 8
+5: Duchy(5) : 8
+6: Province(8) : 7
+7: Chapel(2) : 10
+8: Cellar(2) : 10
+9: Moneylender(4) : 10
+10: Workshop(3) : 10
+11: Merchant(3) : 10
+12: Village(3) : 6
+13: Market(5) : 5
+14: Laboratory(5) : 10
+15: Festival(5) : 10
+16: Smithy(3) : 8
+-------------------
+States: 
+Coin : 1
+Buy : 3
+Action : 3
+enter number
+0
+Buy phase is over.
+======================
+Action phase Start
+======================
+-------------------
+turn: 14
+score: 9
+```
