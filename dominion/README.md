@@ -79,9 +79,6 @@ One of the major learning milestones in this project was moving from naive, prot
 
 ## 🤖 AI-Assisted Learning
 
-### 🎲 Random Number Generation (`std::mt19937`)
-
-
-### 🔍 Linear Search (`std::find`)
-
-### 🗑️ Conditional Deletion (`std::erase_if`)
+- 🎲 Random Number Generation (`std::mt19937`)
+- 🔍 Linear Search (`std::find`)
+- 🗑️ Conditional Deletion (`std::erase_if`)
