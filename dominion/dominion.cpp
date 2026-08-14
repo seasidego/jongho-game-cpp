@@ -61,7 +61,6 @@ void Card::print() const {
         std::cout << a.getAbility() << " ";
     }
     std::cout << std::endl;
-    // std::cout << "uniqueAbility: " << uniqueAbility_.getAbility() << std::endl;
     std::cout << "categoris: ";
     for (const auto& c : categoris_) {
         std::cout << c << " ";
@@ -103,7 +102,7 @@ RetCode Chapel::play(Player& player, Game& game) const {
     auto [indexes, isStop] = game.inputHandIndex(trashCardAmount_);
 
     for (const auto index : indexes) {
-        if (index == -1) { // dis -1 to change one base to zero base. so it has to be -1
+        if (isStop) {
             return RetCode::UserDontWant;
         }
         if (game.trashCardFromHand(index) != RetCode::Success) {
@@ -152,7 +151,7 @@ RetCode Moneylender::play(Player& player, Game& game) const {
 
         if (indexes.size() > 0) {
             index = indexes[0];
-            if (isStop) { // dis -1 to change one base to zero base. so it has to be -1
+            if (isStop) {
                 return RetCode::UserDontWant;
             }
             if (player.getHand().getCard(index) == Card::Type::Copper) {
@@ -175,7 +174,7 @@ RetCode Workshop::play(Player& player, Game& game) const {
     std::cout << std::format("Gain a card costing up to {} >\n", maxCost_);
     while (true) {
         auto [index, isStop] = game.inputGetFromSupply(true);
-        if (isStop) { // dis -1 to change one base to zero base. so it has to be -1
+        if (isStop) {
             return RetCode::UserDontWant;
         }
         if (game.gainCardByCost(index, maxCost_) == RetCode::Success) {
@@ -239,11 +238,9 @@ int CardPile::getSize() const {
 }
 
 void CardPile::shuffle() {
-    // 1. 하드웨어 시드를 기반으로 난수 생성기 초기화
     std::random_device rd;
     std::mt19937 g(rd());
 
-    // 2. std::shuffle을 이용해 vector 요소들을 무작위로 섞음
     std::shuffle(cards_.begin(), cards_.end(), g);
 }
 
@@ -631,10 +628,6 @@ const Card& CardRegistry::getInfo(Card::Type card) const {
     return *(cards_.at(card));
 }
 
-// int CardRegistry::getSize() const {
-//     return cards_.size();
-// }
-
 void CardRegistry::initCards() {
     cards_.emplace(
         Card::Type::Copper,
@@ -909,7 +902,6 @@ void Game::print() const {
     for (const auto& p : players_) {
         p.print();
     }
-    // registry_.print();
 }
 
 void Game::printHand() const {

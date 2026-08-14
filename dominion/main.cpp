@@ -5,12 +5,12 @@
 
 int main(int argc, char **argv) {
     for (int i = 0; i < argc ; i++) {
-        // 실행할 때 arg에 gtest가 있으면
+        // when start, if arg has gtest
         if (std::strcmp(argv[i], "gtest") == 0) {
-            // google test에 argc, arg 전달
+            // send argc, arg to google test
             ::testing::InitGoogleTest(&argc, argv);
 
-            // 여기서 모든 테스트 실행
+            // do all tests in here
             return RUN_ALL_TESTS();
         }
     }
@@ -59,6 +59,5 @@ int main(int argc, char **argv) {
 
     }
     
-
     return 0;
 }

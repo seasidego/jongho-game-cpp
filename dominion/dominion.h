@@ -6,7 +6,6 @@
 #include <map>
 #include <random>
 #include <set>
-// #include <gtest/gtest_prod.h>
 
 enum class TurnState {
     None,
@@ -58,22 +57,6 @@ private:
     int amount_ = 0;
 };
 
-// class UniqueAbility {
-// public:
-//     enum class Ability {
-//         None,
-//         Chapel,
-//         Cellar,
-//         Moneylender,
-//         Workshop,
-//         Merchant,
-//     };
-//     UniqueAbility(Ability ability) : ability_(ability) {};
-//     Ability getAbility() const;
-// private:
-//     Ability ability_ = Ability::None;
-// };
-
 class Player;
 class Game;
 
@@ -123,7 +106,6 @@ private:
     std::string name_;
     int cost_ = 0;
     std::vector<BasicAbility> abilitys_;
-    // UniqueAbility uniqueAbility_;
     std::vector<Category> categoris_;
 };
 
@@ -321,7 +303,6 @@ public:
     void print() const;
     bool isVaild(int number) const;
 private:
-    // std::map<Card::Type, Card> cards_;
     std::map<Card::Type, std::unique_ptr<Card>> cards_;
 };
 
@@ -415,18 +396,6 @@ inline std::ostream& operator<<(std::ostream& os, const Card::Category& type) {
     }
     return os;
 }
-
-// inline std::ostream& operator<<(std::ostream& os, const UniqueAbility::Ability& ability) {
-//     switch (ability) {
-//         case UniqueAbility::Ability::None: os << "None"; break;
-//         case UniqueAbility::Ability::Chapel: os << "Chapel"; break;
-//         case UniqueAbility::Ability::Cellar: os << "Cellar"; break;
-//         case UniqueAbility::Ability::Moneylender: os << "Moneylender"; break;
-//         case UniqueAbility::Ability::Workshop: os << "Workshop"; break;
-//         case UniqueAbility::Ability::Merchant: os << "Merchant"; break;
-//     }
-//     return os;
-// }
 
 inline std::ostream& operator<<(std::ostream& os, const BasicAbility::Ability& ability) {
     switch (ability) {
