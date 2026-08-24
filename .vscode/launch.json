@@ -5,7 +5,8 @@
             "name": "Run Google Tests with Args",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/build/dominion/dominion",
+            // "program": "${workspaceFolder}/build/dominion/dominion",
+            "program": "${workspaceFolder}/build/lifegame/lifegame",
             "args": [
                 "gtest",
                 // "--gtest_color=yes"

@@ -10,7 +10,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_BUILD_TYPE Debug)
 
 # 하위 프로젝트 폴더들을 등록
-add_subdirectory(dominion)
+# add_subdirectory(dominion)
+add_subdirectory(lifegame)
 
 # vscode
 # cmake_minimum_required(VERSION 3.15)
