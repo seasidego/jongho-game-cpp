@@ -30,9 +30,11 @@ public:
 
 class Grid {
 private:
-    std::vector<std::vector<Cell>> grid_;
+    std::vector<std::vector<Cell>>  grid_;
 public:
-    void initGrid();
+    void initGrid(int size);
+    void initGridRandom(int size);
+    void initSpaceGliderGun();
     void start();
     void print() const;
     std::vector<Cell>  getNearCells(int x, int y) const;

@@ -1,5 +1,7 @@
 #include "lifegame.h"
 #include <format>
+#include <cstdlib>
+#include <random>
 
 std::ostream& operator<<(std::ostream& os, ConditionType condition) {
     switch (condition) {
@@ -11,13 +13,65 @@ std::ostream& operator<<(std::ostream& os, ConditionType condition) {
     return os; // 연속 출력을 위해 스트림 참조를 반환합니다.
 }
 
-void Grid::initGrid() {
-    for (int i = 0; i < 10; i++) {
+void Grid::initGrid(int size) {
+    for (int i = 0; i < size; i++) {
         std::vector<Cell> cellLine;
-        for (int j = 0; j < 10; j++) {
+        for (int j = 0; j < size; j++) {
             cellLine.emplace_back(Cell(ConditionType::Dead, i, j));
         }    
         grid_.emplace_back(cellLine);
+    }
+}
+
+void Grid::initGridRandom(int size) {
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    for (int i = 0; i < size; i++) {
+        std::vector<Cell> cellLine;
+        for (int j = 0; j < size; j++) {
+            std::uniform_int_distribution<int> random(0, 1);
+
+            if (random(gen) == 1) {
+                cellLine.emplace_back(Cell(ConditionType::Alive, i, j));
+            } else {
+                cellLine.emplace_back(Cell(ConditionType::Dead, i, j));
+            }            
+        }    
+        grid_.emplace_back(cellLine);
+    }
+}
+
+void Grid::initSpaceGliderGun() {
+    std::vector<std::string> pattern = {
+        "....................................",
+        "........................X...........",
+        "......................X.X...........",
+        "............XX......XX............XX",
+        "...........X...X....XX............XX",
+        "XX........X.....X...XX............",
+        "XX........X...X.XX....X.X.........",
+        "..........X.....X.......X..........",
+        "...........X...X....................",
+        "............XX......................"
+    };
+
+    int size = 50;
+    for (int i = 0; i < size; i++) {
+        std::vector<Cell> cellLine;
+        for (int j = 0; j < size; j++) {
+            std::uniform_int_distribution<int> random(0, 1);
+            cellLine.emplace_back(Cell(ConditionType::Dead, i, j));
+        }    
+        grid_.emplace_back(cellLine);
+    }
+
+    for (int y = 0; y < pattern.size(); ++y) {
+        for (int x = 0; x < pattern[y].size(); ++x) {
+            if (pattern[y][x] == 'X') {
+                grid_[5 + y][5 + x].setCondition(ConditionType::Alive);
+            }
+        }
     }
 }
 
@@ -82,6 +136,8 @@ void Cell::changeCondition() {
 }
 
 void Grid::print() const {
+    std::system("clear");
+
     int row = 0;
     std::for_each(grid_.begin(), grid_.end(), [&row](const auto& cellLine) {
         std::cout << std::format("{:3}", row)  << ": ";
@@ -91,7 +147,7 @@ void Grid::print() const {
         std::cout << std::endl;
         row++;
     });
-    std::cout << "------------------------" << std::endl;
+    // std::cout << "------------------------" << std::endl;
 }
 
 std::vector<Cell> Grid::getNearCells(int x, int y) const {
@@ -105,7 +161,7 @@ std::vector<Cell> Grid::getNearCells(int x, int y) const {
         }
         for (int j = -1; j <= 1; j++) {
             yp = y + j; 
-            if (yp < 0 || yp >= grid_.size()) {
+            if (yp < 0 || yp >= grid_[xp].size()) {
                 continue;
             }
             if (xp == x && yp == y) {

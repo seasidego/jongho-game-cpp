@@ -3,7 +3,7 @@
 
 TEST(lifegame, addNumber) {
     Grid grid;
-    grid.initGrid();
+    grid.initGrid(10);
     
     grid.setAlive(5, 4);
     grid.setAlive(5, 5);
