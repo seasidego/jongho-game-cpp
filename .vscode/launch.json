@@ -6,7 +6,7 @@
             "type": "cppdbg",
             "request": "launch",
             // "program": "${workspaceFolder}/build/dominion/dominion",
-            "program": "${workspaceFolder}/build/lifegame/lifegame",
+            "program": "${workspaceFolder}/build/clashroyale/clashroyale",
             "args": [
                 "gtest",
                 // "--gtest_color=yes"
