@@ -2,6 +2,7 @@
 #include <format>
 #include "clashroyale.h"
 #include <gtest/gtest.h>
+#include "raylib.h"
 
 int main(int argc, char **argv) {
     for (int i = 0; i < argc ; i++) {
@@ -15,6 +16,5 @@ int main(int argc, char **argv) {
         }
     }
 
-    std::cout << "works~" << std::endl;
     return 0;
 }
