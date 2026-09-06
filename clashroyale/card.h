@@ -1,4 +1,5 @@
 #pragma once 
+#include "raylib.h"
 
 enum class AttackType {
     None,
@@ -12,6 +13,7 @@ class Card {
 private:
     int cost_ = 0;
     int generationTime_ = 0;
+    Vector2 pos_;
 
 public:
     Card() = default;

@@ -2,13 +2,13 @@
 #include "player.h"
 #include "board.h"
 #include "card.h"
+#include "raylib.h"
 
 class UIMgr {
 private:
     bool run_ = true;
-    int startX_ = 30;
-    int startY_ = 30;
-    int tileSize_ = 20;
+    Vector2 startPos_{30, 30};
+    float tileSize_ = 20;
 
 public:
     UIMgr() = default;
