@@ -1,3 +1,4 @@
+#pragma once 
 
 enum class AttackType {
     None,
@@ -30,20 +31,6 @@ private:
 public:
     Unit() = default;
     ~Unit() = default;
-};
-
-class Building {
-private:
-    int hp_ = 0;
-    int damage_ = 0;
-    AttackType attackType_ = AttackType::None;
-    int activeCoolDown_ = 0;
-    int size_ = 0;
-    int attackSpeed_ = 0;
-
-public:
-    Building() = default;
-    ~Building() = default;
 };
 
 class Building : public Card {

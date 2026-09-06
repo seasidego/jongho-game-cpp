@@ -1,3 +1,4 @@
+#pragma once 
 #include <vector>
 
 class Tile {
@@ -10,12 +11,17 @@ public:
     ~Tile() = default;
 };
 
+
 class Board {
+public:
+    using board = std::vector<std::vector<Tile>>;
 private:
-    std::vector<std::vector<Tile>> board_;
+    board board_;
     
 public:
     Board() = default;
     ~Board() = default;
+    void init();
+    const board& getBoard() const;
 };
 
