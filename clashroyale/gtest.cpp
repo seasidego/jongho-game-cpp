@@ -5,7 +5,7 @@
 
 TEST(lifegame, addNumber) {
     Game game;
-    game.startUI();
+    game.init();
     game.print();
 }
 

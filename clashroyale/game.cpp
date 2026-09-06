@@ -4,7 +4,7 @@
 #include "raylib.h"
 
 void UIMgr::init() {
-    InitWindow(600, 1000, "Raylib Simple Test");
+    InitWindow(600, 800, "Raylib Simple Test");
     SetTargetFPS(60);
 }
 
@@ -32,6 +32,7 @@ void UIMgr::printBoard(const Board& board) const {
             DrawText("T", startX_ + posx * tileSize_, startY_ + posy * tileSize_, tileSize_, SKYBLUE);
             posx++;
         });
+        posx = 0;
         posy++;
     });
 }
@@ -40,18 +41,23 @@ void UIMgr::stop() {
     run_ = false;
 }
 
-void Game::startUI() {
-    UIMgr_.init();
+// void Game::startUI() {
+//     uiMgr_.init();
+// }
+
+void Game::init() {
+    uiMgr_.init();
+    board_.init();
 }
 
 void Game::endUI() {
-    UIMgr_.stop();
+    uiMgr_.stop();
 }
 
 const UIMgr& Game::getUIMgr() const {
-    return UIMgr_;
+    return uiMgr_;
 }
 
 void Game::print() {
-    UIMgr_.print(board_);
+    uiMgr_.print(board_);
 }

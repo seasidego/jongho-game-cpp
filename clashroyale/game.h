@@ -25,14 +25,15 @@ class Game {
 private:
     Playar player_;
     Board board_;
-    UIMgr UIMgr_;
+    UIMgr uiMgr_;
 
 public:
     Game() = default;
     ~Game() = default;
 
 public:
-    void startUI();
+    // void startUI();
+    void init();
     void endUI();
     const UIMgr& getUIMgr() const ;
     void print();
