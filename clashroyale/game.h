@@ -3,6 +3,7 @@
 #include "board.h"
 #include "card.h"
 #include "raylib.h"
+#include <map>
 
 class UIMgr {
 private:
@@ -26,6 +27,7 @@ private:
     Playar player_;
     Board board_;
     UIMgr uiMgr_;
+    CardMrg cardMgr_;
 
 public:
     Game() = default;
@@ -39,4 +41,3 @@ public:
     void print();
 
 };
-

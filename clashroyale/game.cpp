@@ -28,12 +28,14 @@ void UIMgr::printBoard(const Board& board) const {
     int posy = 0;
     std::for_each(boardList.begin(), boardList.end(), [this, &posx, &posy](const auto& b) {
         std::for_each(b.begin(), b.end(), [this, &posx, &posy](const auto& t) {
-            DrawRectangleRec(Rectangle{startPos_.x + posx * tileSize_, startPos_.y + posy * tileSize_, tileSize_, tileSize_}, SKYBLUE);
+            DrawRectangleRec(Rectangle{startPos_.x + posx * tileSize_, startPos_.y + posy * tileSize_, tileSize_, tileSize_}, BLACK);
+            DrawRectangleLinesEx(Rectangle{startPos_.x + posx * tileSize_, startPos_.y + posy * tileSize_, tileSize_, tileSize_}, 1.0, RED);
             posx++;
         });
         posx = 0;
         posy++;
     });
+    
 }
 
 void UIMgr::stop() {
@@ -47,6 +49,7 @@ void UIMgr::stop() {
 void Game::init() {
     uiMgr_.init();
     board_.init();
+    cardMgr_.init();
 }
 
 void Game::endUI() {
