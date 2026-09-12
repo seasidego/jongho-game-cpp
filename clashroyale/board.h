@@ -16,22 +16,24 @@ public:
 
 class Board {
 public:
-    using board = std::vector<std::vector<Tile>>;
+    using Grid = std::vector<std::vector<Tile>>;
 private:
-    board board_;
+    Grid board_;
     
 public:
     Board() = default;
     ~Board() = default;
     void init();
-    const board& getBoard() const;
+    const Grid& getBoard() const;
 };
 
 class Card;
 
 class CardMrg {
+public:
+    using Cards = std::vector<std::unique_ptr<Card>>;
 private:
-    std::vector<std::unique_ptr<Card>> cards_;
+    Cards cards_;
 
 public:
     CardMrg() = default;
@@ -39,6 +41,7 @@ public:
 
 public:
     void init();
+    const Cards& getCards() const;
 
 };
 

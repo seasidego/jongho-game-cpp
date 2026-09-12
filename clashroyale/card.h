@@ -19,17 +19,22 @@ enum class CardType {
 class Card {
 protected:
     int cost_ = 0;
+    float size_ = 0.;
     int generationTime_ = 0;
     Vector2 pos_;
     CardType type_;
     AttackType attackType_ = AttackType::None;
     int activeCoolDown_ = 0;
+    
 
 public:
-    Card(int cost, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown);
+    Card(int cost, float size, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown);
     virtual ~Card() = default;
 
 public:
+    virtual const char* getShape() const;
+    virtual float getSize() const;
+    const Vector2& getPos() const;
 
 };
 
@@ -39,32 +44,31 @@ private:
     int speed_ = 0;
     bool fly_ = false;
     int damage_ = 0;
-    int attackSpeed_ = 0;
-    int range_ = 0;
+    float attackSpeed_ = 0;
+    float range_ = 0;
     
 public:
     Unit() = default;
     ~Unit() = default;
 
 public:
-    
+    const char* getShape() const override;
 };
 
 class Building : public Card {
 protected:
     int hp_ = 0;
     int damage_ = 0;
-    int size_ = 0;
-    int attackSpeed_ = 0;
-    int range_ = 0;
+    float attackSpeed_ = 0;
+    float range_ = 0;
 
 public:
     Building(int cost, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
-        int hp, int damage, int size, int attackSpeed, int range);
+        int hp, int damage, int size, float attackSpeed, float range);
     virtual ~Building() = default;
 
 public:
-
+    const char* getShape() const override;
 };
 
 class PrincessTower : public Building {
@@ -75,14 +79,13 @@ public:
     ~PrincessTower() = default;
 
 public:
-
+    const char* getShape() const override;
 };
 
 class Spell : public Card {
 private:
     int damage_ = 0;
     int activeCoolDown_ = 0;
-    int area_ = 0;
 public:
     Spell() = default;
     ~Spell() = default;

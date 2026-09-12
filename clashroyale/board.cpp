@@ -8,12 +8,14 @@ void Board::init() {
     }
 }
 
-const Board::board& Board::getBoard() const {
+const Board::Grid& Board::getBoard() const {
     return board_;
 }
 
 void CardMrg::init() {
-    
-    // CrownTower c(0, 0, Vector2{30, 30}, CardType::CrownTower, AttackType::All, 0, CrownTowerHP, );
-    // cards_.emplace_back(c);
+    cards_.emplace_back(std::make_unique<PrincessTower>());
+}
+
+const CardMrg::Cards& CardMrg::getCards() const {
+    return cards_;
 }

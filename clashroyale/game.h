@@ -5,11 +5,12 @@
 #include "raylib.h"
 #include <map>
 
+const float TileSize = 20;
+
 class UIMgr {
 private:
     bool run_ = true;
     Vector2 startPos_{30, 30};
-    float tileSize_ = 20;
 
 public:
     UIMgr() = default;
@@ -17,8 +18,8 @@ public:
 
 public:
     void init();
-    void print(const Board& b) const;
-    void printBoard(const Board& b) const;
+    void print(const Board& b, const CardMrg& mrg) const;
+    void printBoard(const Board& b, const CardMrg& mrg) const;
     void stop();
 };
 
