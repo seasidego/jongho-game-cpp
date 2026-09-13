@@ -11,10 +11,14 @@ class Tile {
 private:
     int x_ = 0;
     int y_ = 0;
-    
+    bool canCross_ = 0;
+
 public:
-    Tile() = default;
+    Tile(bool canMove);
     ~Tile() = default;
+
+public:
+    bool canCross() const;
 };
 
 
@@ -49,3 +53,4 @@ public:
     void moveUnits();
 };
 
+ 

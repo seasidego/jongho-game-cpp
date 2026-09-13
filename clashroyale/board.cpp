@@ -2,9 +2,26 @@
 #include "card.h"
 #include "player.h"
 
+Tile::Tile(bool canCross) : canCross_(canCross) {}
+
+bool Tile::canCross() const {
+    return canCross_;
+}
+
 void Board::init() {
     for (int i = 0; i < BoardHight; i++) {
-        board_.emplace_back(std::vector<Tile>(BoardWidth));
+        board_.emplace_back(std::vector<Tile>{});
+        for (int j = 0; j < BoardWidth; j++) {
+            if (i == 15 || i == 16) {
+                if (j == 3 || j == 4 || j == 13 || j == 14) {
+                    board_[i].emplace_back(Tile(true));
+                } else {
+                    board_[i].emplace_back(Tile(false));
+                }
+            } else {
+                board_[i].emplace_back(Tile(true));
+            }
+        }
     }
 }
 
