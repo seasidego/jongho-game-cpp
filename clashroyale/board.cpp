@@ -13,9 +13,12 @@ const Board::Grid& Board::getBoard() const {
 }
 
 void CardMrg::init() {
-    cards_.emplace_back(std::make_unique<PrincessTower>(2, 24));
-    cards_.emplace_back(std::make_unique<PrincessTower>(13, 24));
-    cards_.emplace_back(std::make_unique<KingTower>(7, 27));
+    cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Blue, 2, 24));
+    cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Blue, 13, 24));
+    cards_.emplace_back(std::make_unique<KingTower>(Card::Team::Blue, 7, 27));
+    cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Red, 2, 5));
+    cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Red, 13, 5));
+    cards_.emplace_back(std::make_unique<KingTower>(Card::Team::Red, 7, 1));
 }
 
 const CardMrg::Cards& CardMrg::getCards() const {

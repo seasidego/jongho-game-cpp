@@ -17,7 +17,14 @@ enum class CardType {
 
 
 class Card {
+public:
+    enum class Team {
+        None,
+        Red,
+        Blue,
+    };
 protected:
+    Team team_ = Team::Blue;
     int cost_ = 0;
     float size_ = 0.;
     int generationTime_ = 0;
@@ -25,16 +32,16 @@ protected:
     CardType type_;
     AttackType attackType_ = AttackType::None;
     int activeCoolDown_ = 0;
-    
 
 public:
-    Card(int cost, float size, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown);
+    Card(Team team, int cost, float size, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown);
     virtual ~Card() = default;
 
 public:
     virtual const char* getShape() const;
     virtual float getSize() const;
     const Vector2& getPos() const;
+    const Team getTeam() const;
 
 };
 
@@ -63,7 +70,7 @@ protected:
     float range_ = 0;
 
 public:
-    Building(int cost, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
+    Building(Team team, int cost, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
         int hp, int damage, int size, float attackSpeed, float range);
     virtual ~Building() = default;
 
@@ -75,7 +82,7 @@ class PrincessTower : public Building {
 private:
     
 public:
-    PrincessTower(int x, int y);
+    PrincessTower(Team team, int x, int y);
     ~PrincessTower() = default;
 
 public:
@@ -86,7 +93,7 @@ class KingTower : public Building {
 private:
     
 public:
-    KingTower(int x, int y);
+    KingTower(Team team, int x, int y);
     ~KingTower() = default;
 
 public:

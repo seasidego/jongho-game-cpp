@@ -29,7 +29,7 @@ void UIMgr::printBoard(const Board& board, const CardMrg& mrg) const {
     std::for_each(boardList.begin(), boardList.end(), [this, &posx, &posy](const auto& b) {
         std::for_each(b.begin(), b.end(), [this, &posx, &posy](const auto& t) {
             DrawRectangleRec(Rectangle{StartPos.x + posx * TileSize, StartPos.y + posy * TileSize, TileSize, TileSize}, BLACK);
-            DrawRectangleLinesEx(Rectangle{StartPos.x + posx * TileSize, StartPos.y + posy * TileSize, TileSize, TileSize}, 1.0, RED);
+            DrawRectangleLinesEx(Rectangle{StartPos.x + posx * TileSize, StartPos.y + posy * TileSize, TileSize, TileSize}, 1.0, WHITE);
             posx++;
         });
         posx = 0;
@@ -47,9 +47,10 @@ void UIMgr::printBoard(const Board& board, const CardMrg& mrg) const {
             pos.x + (size - textSize.x) / 2.0f,
             pos.y + (size - textSize.y) / 2.0f
         };
-        
-        DrawRectangleV(c->getPos(), Vector2{c->getSize() * TileSize, c->getSize() * TileSize}, BLUE);
-        DrawTextEx(GetFontDefault(), text, textPos, size * 0.8, spacing, RED);
+        auto recColor = (c->getTeam() == Card::Team::Red) ? RED : BLUE;
+
+        DrawRectangleV(c->getPos(), Vector2{c->getSize() * TileSize, c->getSize() * TileSize}, BLACK);
+        DrawTextEx(GetFontDefault(), text, textPos, size * 0.8, spacing, recColor);
     });
     
 }
