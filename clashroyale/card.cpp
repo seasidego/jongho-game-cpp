@@ -19,9 +19,14 @@ Building::Building(int cost, int generationTime, Vector2 pos, CardType type, Att
     , attackSpeed_(attackSpeed)
     , range_(range) {}
 
-PrincessTower::PrincessTower()
-    : Building(0, 0, Vector2{100, 100}, CardType::CrownTower, AttackType::All, 0, 3052, 109, 3, 0.8, 7.5 * TileSize) {}
-    
+PrincessTower::PrincessTower(int x, int y)
+    : Building(0, 0, Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
+        CardType::CrownTower, AttackType::All, 0, 3052, 109, 3, 0.8, 7.5 * TileSize) {}
+
+KingTower::KingTower(int x, int y)
+    : Building(0, 0, Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
+        CardType::CrownTower, AttackType::All, 0, 4824, 109, 4, 1, 7 * TileSize) {}
+
 const char* Card::getShape() const {
     return "?";
 }
@@ -43,5 +48,9 @@ const char* Unit::getShape() const {
 }
 
 const char* PrincessTower::getShape() const {
-    return "g";
+    return "P";
+}
+
+const char* KingTower::getShape() const {
+    return "K";
 }

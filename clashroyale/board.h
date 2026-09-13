@@ -3,6 +3,10 @@
 #include <memory>
 // #include "card.h"
 
+const int BoardWidth = 18;
+const int BoardHight = 32;
+
+
 class Tile {
 private:
     int x_ = 0;

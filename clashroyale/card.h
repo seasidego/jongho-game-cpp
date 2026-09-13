@@ -75,8 +75,19 @@ class PrincessTower : public Building {
 private:
     
 public:
-    PrincessTower();
+    PrincessTower(int x, int y);
     ~PrincessTower() = default;
+
+public:
+    const char* getShape() const override;
+};
+
+class KingTower : public Building {
+private:
+    
+public:
+    KingTower(int x, int y);
+    ~KingTower() = default;
 
 public:
     const char* getShape() const override;

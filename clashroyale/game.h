@@ -6,11 +6,11 @@
 #include <map>
 
 const float TileSize = 20;
+const Vector2 StartPos{30, 30};
 
 class UIMgr {
 private:
     bool run_ = true;
-    Vector2 startPos_{30, 30};
 
 public:
     UIMgr() = default;

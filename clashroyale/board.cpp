@@ -3,8 +3,8 @@
 #include "player.h"
 
 void Board::init() {
-    for (int i = 0; i < 32; i++) {
-        board_.emplace_back(std::vector<Tile>(18));
+    for (int i = 0; i < BoardHight; i++) {
+        board_.emplace_back(std::vector<Tile>(BoardWidth));
     }
 }
 
@@ -13,7 +13,9 @@ const Board::Grid& Board::getBoard() const {
 }
 
 void CardMrg::init() {
-    cards_.emplace_back(std::make_unique<PrincessTower>());
+    cards_.emplace_back(std::make_unique<PrincessTower>(2, 24));
+    cards_.emplace_back(std::make_unique<PrincessTower>(13, 24));
+    cards_.emplace_back(std::make_unique<KingTower>(7, 27));
 }
 
 const CardMrg::Cards& CardMrg::getCards() const {

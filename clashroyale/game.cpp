@@ -28,8 +28,8 @@ void UIMgr::printBoard(const Board& board, const CardMrg& mrg) const {
     int posy = 0;
     std::for_each(boardList.begin(), boardList.end(), [this, &posx, &posy](const auto& b) {
         std::for_each(b.begin(), b.end(), [this, &posx, &posy](const auto& t) {
-            DrawRectangleRec(Rectangle{startPos_.x + posx * TileSize, startPos_.y + posy * TileSize, TileSize, TileSize}, BLACK);
-            DrawRectangleLinesEx(Rectangle{startPos_.x + posx * TileSize, startPos_.y + posy * TileSize, TileSize, TileSize}, 1.0, RED);
+            DrawRectangleRec(Rectangle{StartPos.x + posx * TileSize, StartPos.y + posy * TileSize, TileSize, TileSize}, BLACK);
+            DrawRectangleLinesEx(Rectangle{StartPos.x + posx * TileSize, StartPos.y + posy * TileSize, TileSize, TileSize}, 1.0, RED);
             posx++;
         });
         posx = 0;
