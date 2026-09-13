@@ -10,7 +10,6 @@ const Vector2 StartPos{30, 30};
 
 class UIMgr {
 private:
-    bool run_ = true;
 
 public:
     UIMgr() = default;
@@ -29,6 +28,7 @@ private:
     Board board_;
     UIMgr uiMgr_;
     CardMrg cardMgr_;
+    bool run_ = true;
 
 public:
     Game() = default;
@@ -37,8 +37,8 @@ public:
 public:
     // void startUI();
     void init();
-    void endUI();
     const UIMgr& getUIMgr() const ;
-    void print();
+    void play();
+    void moveUnit();
 
 };

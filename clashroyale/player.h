@@ -7,6 +7,6 @@ private:
 
 public:
     Playar() = default;
-    ~Playar() = default;   
+    ~Playar() = default;
 };
 

@@ -40,9 +40,9 @@ public:
 public:
     virtual const char* getShape() const;
     virtual float getSize() const;
-    const Vector2& getPos() const;
-    const Team getTeam() const;
-
+    virtual const Vector2& getPos() const;
+    virtual const Team getTeam() const;
+    virtual void move() {};
 };
 
 class Unit : public Card {
@@ -56,12 +56,13 @@ private:
     float attackRange_ = 0;
     
 public:
-    Unit(Team team, int cost, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
-                   int hp, int damage, int speed, float size, float attackSpeed, float firstAttackSpeed, float range, float attackRange);
+    Unit(Team team, int cost, float size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
+                   int hp, int damage, int speed,  float attackSpeed, float firstAttackSpeed, float range, float attackRange);
     ~Unit() = default;
 
 public:
-    const char* getShape() const override;
+    virtual const char* getShape() const override;
+    virtual void move() override;
 };
 
 class Knight : public Unit {
@@ -83,12 +84,12 @@ protected:
     float range_ = 0;
 
 public:
-    Building(Team team, int cost, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
-        int hp, int damage, int size, float attackSpeed, float range);
+    Building(Team team, int cost, int size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
+        int hp, int damage, float attackSpeed, float range);
     virtual ~Building() = default;
 
 public:
-    const char* getShape() const override;
+    virtual const char* getShape() const override;
 };
 
 class PrincessTower : public Building {

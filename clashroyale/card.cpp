@@ -1,5 +1,6 @@
 #include "card.h"
 #include "game.h"
+#include <iostream>
 
 Card::Card(Team team, int cost, float size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown)  
     : team_(team)
@@ -11,8 +12,8 @@ Card::Card(Team team, int cost, float size, Vector2 pos, CardType type, AttackTy
     , activeCoolDown_(activeCoolDown) {}
 
 
-Building::Building(Team team, int cost, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
-                   int hp, int damage, int size, float attackSpeed, float range)
+Building::Building(Team team, int cost, int size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
+                   int hp, int damage, float attackSpeed, float range)
     : Card(team, cost, size, pos, type, attackType, activeCoolDown)
     , hp_(hp)
     , damage_(damage)
@@ -20,15 +21,15 @@ Building::Building(Team team, int cost, Vector2 pos, CardType type, AttackType a
     , range_(range) {}
 
 PrincessTower::PrincessTower(Team team, int x, int y)
-    : Building(team, 0, Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
-        CardType::CrownTower, AttackType::All, 0, 3052, 109, 3, 0.8, 7.5 * TileSize) {}
+    : Building(team, 0, 3, Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
+        CardType::CrownTower, AttackType::All, 0, 3052, 109, 0.8, 7.5 * TileSize) {}
 
 KingTower::KingTower(Team team, int x, int y)
-    : Building(team, 0, Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
-        CardType::CrownTower, AttackType::All, 0, 4824, 109, 4, 1, 7 * TileSize) {}
+    : Building(team, 0, 4, Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
+        CardType::CrownTower, AttackType::All, 0, 4824, 109, 1, 7 * TileSize) {}
 
-Unit::Unit(Team team, int cost, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
-                   int hp, int damage, int speed, float size, float attackSpeed, 
+Unit::Unit(Team team, int cost, float size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
+                   int hp, int damage, int speed, float attackSpeed, 
                    float firstAttackSpeed, float range, float attackRange)
     : Card(team, cost, size, pos, type, attackType, activeCoolDown)
     , hp_(hp)
@@ -40,8 +41,8 @@ Unit::Unit(Team team, int cost, Vector2 pos, CardType type, AttackType attackTyp
     , attackRange_(attackRange) {}
     
 Knight::Knight(Team team, int x, int y) 
-    :Unit(team, 3, Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
-    CardType::GroundUnit, AttackType::Land, 1, 1,766, 60, 1., 1.2, 0.5, 5.5, 1.2) {}
+    :Unit(team, 3, 1., Vector2{StartPos.x + TileSize * x, StartPos.y + TileSize * y},
+    CardType::GroundUnit, AttackType::Land, 1, 1,766, 60, 1.2, 0.5, 5.5, 1.2) {}
 
 
 
@@ -67,6 +68,16 @@ const char* Building::getShape() const {
 
 const char* Unit::getShape() const {
     return "U";
+}
+
+void Unit::move() {
+    float tilePerSecond = speed_ / 60;
+    if (team_ == Team::Red) {
+        pos_.y += tilePerSecond;
+    } else {
+        pos_.y -= tilePerSecond;
+    }
+    std::cout << "works" << std::endl;
 }
 
 const char* PrincessTower::getShape() const {

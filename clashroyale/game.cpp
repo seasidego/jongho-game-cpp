@@ -9,17 +9,7 @@ void UIMgr::init() {
 }
 
 void UIMgr::print(const Board& b, const CardMrg& mrg) const {
-    while (!WindowShouldClose() && run_) {
-        BeginDrawing();
     
-        ClearBackground(BLACK);
-        
-        //DrawText("Raylib is working!", startX_, startY_, 30, SKYBLUE);
-        printBoard(b, mrg);
-
-        EndDrawing();
-    }
-    CloseWindow();
 }
 
 void UIMgr::printBoard(const Board& board, const CardMrg& mrg) const {
@@ -47,16 +37,12 @@ void UIMgr::printBoard(const Board& board, const CardMrg& mrg) const {
             pos.x + (size - textSize.x) / 2.0f,
             pos.y + (size - textSize.y) / 2.0f
         };
-        auto recColor = (c->getTeam() == Card::Team::Red) ? RED : BLUE;
+        auto textColor = (c->getTeam() == Card::Team::Red) ? RED : BLUE;
 
         DrawRectangleV(c->getPos(), Vector2{c->getSize() * TileSize, c->getSize() * TileSize}, BLACK);
-        DrawTextEx(GetFontDefault(), text, textPos, size * 0.8, spacing, recColor);
-    });
+        DrawTextEx(GetFontDefault(), text, textPos, size * 0.8, spacing, textColor);
+    }); 
     
-}
-
-void UIMgr::stop() {
-    run_ = false;
 }
 
 // void Game::startUI() {
@@ -69,14 +55,27 @@ void Game::init() {
     cardMgr_.init();
 }
 
-void Game::endUI() {
-    uiMgr_.stop();
-}
-
 const UIMgr& Game::getUIMgr() const {
     return uiMgr_;
 }
 
-void Game::print() {
-    uiMgr_.print(board_, cardMgr_);
+void Game::play() {
+    while (!WindowShouldClose() && run_) {
+        BeginDrawing();
+    
+        ClearBackground(BLACK);
+        
+        uiMgr_.printBoard(board_, cardMgr_);
+        cardMgr_.moveUnits();
+        
+        EndDrawing();
+    }
+    CloseWindow();
 }
+
+void Game::moveUnit() {
+    cardMgr_.moveUnits();
+}
+
+
+    

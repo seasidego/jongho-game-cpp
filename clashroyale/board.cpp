@@ -12,6 +12,12 @@ const Board::Grid& Board::getBoard() const {
     return board_;
 }
 
+void CardMrg::moveUnits() {
+    std::for_each(cards_.begin(), cards_.end(), [](auto& u) {
+        u->move();
+    });
+}
+
 void CardMrg::init() {
     cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Blue, 2, 24));
     cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Blue, 13, 24));
@@ -19,6 +25,8 @@ void CardMrg::init() {
     cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Red, 2, 5));
     cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Red, 13, 5));
     cards_.emplace_back(std::make_unique<KingTower>(Card::Team::Red, 7, 1));
+
+    cards_.emplace_back(std::make_unique<Knight>(Card::Team::Blue, 10, 24));
     cards_.emplace_back(std::make_unique<Knight>(Card::Team::Red, 10, 10));
 }
 

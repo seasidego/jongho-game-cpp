@@ -46,6 +46,6 @@ public:
 public:
     void init();
     const Cards& getCards() const;
-
+    void moveUnits();
 };
 
