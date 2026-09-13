@@ -12,6 +12,7 @@ enum class AttackType {
 enum class CardType {
     None,
     CrownTower,
+    GroundUnit
 };
 
 
@@ -27,14 +28,13 @@ protected:
     Team team_ = Team::Blue;
     int cost_ = 0;
     float size_ = 0.;
-    int generationTime_ = 0;
     Vector2 pos_;
     CardType type_;
     AttackType attackType_ = AttackType::None;
     int activeCoolDown_ = 0;
 
 public:
-    Card(Team team, int cost, float size, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown);
+    Card(Team team, int cost, float size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown);
     virtual ~Card() = default;
 
 public:
@@ -49,14 +49,27 @@ class Unit : public Card {
 private:
     int hp_ = 0;
     int speed_ = 0;
-    bool fly_ = false;
     int damage_ = 0;
     float attackSpeed_ = 0;
+    float firstAttackSpeed_ = 0;
     float range_ = 0;
+    float attackRange_ = 0;
     
 public:
-    Unit() = default;
+    Unit(Team team, int cost, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
+                   int hp, int damage, int speed, float size, float attackSpeed, float firstAttackSpeed, float range, float attackRange);
     ~Unit() = default;
+
+public:
+    const char* getShape() const override;
+};
+
+class Knight : public Unit {
+private:
+
+public:
+    Knight(Team team, int x, int y);
+    ~Knight() = default;
 
 public:
     const char* getShape() const override;
@@ -70,7 +83,7 @@ protected:
     float range_ = 0;
 
 public:
-    Building(Team team, int cost, int generationTime, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
+    Building(Team team, int cost, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
         int hp, int damage, int size, float attackSpeed, float range);
     virtual ~Building() = default;
 

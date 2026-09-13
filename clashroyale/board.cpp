@@ -19,6 +19,7 @@ void CardMrg::init() {
     cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Red, 2, 5));
     cards_.emplace_back(std::make_unique<PrincessTower>(Card::Team::Red, 13, 5));
     cards_.emplace_back(std::make_unique<KingTower>(Card::Team::Red, 7, 1));
+    cards_.emplace_back(std::make_unique<Knight>(Card::Team::Red, 10, 10));
 }
 
 const CardMrg::Cards& CardMrg::getCards() const {
