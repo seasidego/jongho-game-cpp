@@ -1,0 +1,15 @@
+## A*
+- check 8 tile around
+- check | current pos(moved for check) - destination pos | 
+- chose tile that has lowest value
+- loop
+- A* using tile
+- but it is not effi션트
+- draw a line to dest
+- if it is possible to go
+- then go
+- if it's not possible,
+- -1 tile from dest
+- check
+- can -> go, can't -> -1 tile
+- repeat until reach dest 

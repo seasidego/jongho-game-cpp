@@ -22,17 +22,18 @@ public:
 };
 
 
+
 class Board {
 public:
-    using Grid = std::vector<std::vector<Tile>>;
+    using Grid = std::vector<std::vector<Tile>>;    
 private:
-    Grid board_;
+    Grid grid_;
     
 public:
     Board() = default;
     ~Board() = default;
     void init();
-    const Grid& getBoard() const;
+    const Grid& getGrid() const;
 };
 
 class Card;
@@ -50,7 +51,7 @@ public:
 public:
     void init();
     const Cards& getCards() const;
-    void moveUnits();
+    void moveUnits(const Board& board);
 };
 
  

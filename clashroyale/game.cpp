@@ -13,7 +13,7 @@ void UIMgr::print(const Board& b, const CardMrg& mrg) const {
 }
 
 void UIMgr::printBoard(const Board& board, const CardMrg& mrg) const {
-    const auto& boardList = board.getBoard();
+    const auto& boardList = board.getGrid();
     int posx = 0;
     int posy = 0;
     std::for_each(boardList.begin(), boardList.end(), [this, &posx, &posy](const auto& b) {
@@ -71,15 +71,15 @@ void Game::play() {
         ClearBackground(BLACK);
         
         uiMgr_.printBoard(board_, cardMgr_);
-        cardMgr_.moveUnits();
-        
+        moveUnit();
+
         EndDrawing();
     }
     CloseWindow();
 }
 
 void Game::moveUnit() {
-    cardMgr_.moveUnits();
+    cardMgr_.moveUnits(board_);
 }
 
 

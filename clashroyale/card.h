@@ -1,5 +1,6 @@
 #pragma once 
 #include "raylib.h"
+#include "nav.h"
 
 enum class AttackType {
     None,
@@ -42,7 +43,8 @@ public:
     virtual float getSize() const;
     virtual const Vector2& getPos() const;
     virtual const Team getTeam() const;
-    virtual void move() {};
+    virtual void move(const Board& board) {}
+    virtual void nav() {}
 };
 
 class Unit : public Card {
@@ -54,6 +56,7 @@ private:
     float firstAttackSpeed_ = 0;
     float range_ = 0;
     float attackRange_ = 0;
+    Nav nav_;
     
 public:
     Unit(Team team, int cost, float size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,
@@ -62,7 +65,7 @@ public:
 
 public:
     virtual const char* getShape() const override;
-    virtual void move() override;
+    virtual void move(const Board& board) override;
 };
 
 class Knight : public Unit {
@@ -114,14 +117,14 @@ public:
     const char* getShape() const override;
 };
 
-class Spell : public Card {
-private:
-    int damage_ = 0;
-    int activeCoolDown_ = 0;
-public:
-    Spell() = default;
-    ~Spell() = default;
+// class Spell : public Card {
+// private:
+//     int damage_ = 0;
+//     int activeCoolDown_ = 0;
+// public:
+//     Spell() = default;
+//     ~Spell() = default;
 
-public:
+// public:
 
-};
+// };

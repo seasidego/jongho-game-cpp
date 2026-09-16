@@ -1,6 +1,8 @@
 #include "card.h"
 #include "game.h"
 #include <iostream>
+#include "raylib.h"
+#include "raymath.h"
 
 Card::Card(Team team, int cost, float size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown)  
     : team_(team)
@@ -70,15 +72,20 @@ const char* Unit::getShape() const {
     return "U";
 }
 
-void Unit::move() {
+void Unit::move(const Board& board) {
     float tilePerSecond = speed_ / 60;
-    if (team_ == Team::Red) {
-        pos_.y += tilePerSecond;
-    } else {
-        pos_.y -= tilePerSecond;
-    }
-    std::cout << "works" << std::endl;
+    // if (team_ == Team::Red) {
+    //     pos_.y += tilePerSecond;
+    // } else {
+    //     pos_.y -= tilePerSecond;
+    // }
+    auto route = nav_.nav(board, pos_, Vector2{StartPos.x + TileSize * 3, StartPos.y + TileSize * 3});
+    std::for_each(route.begin(), route.end(), [this](const auto& t) {
+        pos_.y = t.y * TileSize;
+        pos_.x = t.x * TileSize;
+    });
 }
+
 
 const char* PrincessTower::getShape() const {
     return "P";

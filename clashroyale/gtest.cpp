@@ -7,5 +7,6 @@ TEST(lifegame, addNumber) {
     Game game;
     game.init();
     game.play();
-}
 
+        
+}

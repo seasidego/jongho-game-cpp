@@ -6,7 +6,7 @@
 #include <map>
 
 const float TileSize = 20;
-const Vector2 StartPos{30, 30};
+const Vector2 StartPos{40, 40};
 
 class UIMgr {
 private:
