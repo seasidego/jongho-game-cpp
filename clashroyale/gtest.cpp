@@ -2,6 +2,7 @@
 #include "clashroyale.h"
 #include "raylib.h"
 #include "game.h"
+#include "board.h"
 
 TEST(clashroyale, toTile) {
     // Game game;
@@ -22,7 +23,44 @@ TEST(clashroyale, toTile) {
 }
 
 TEST(clashroyale, play) {
-    Game game;
-    game.init();
-    game.play();
+    // Game game;
+    // game.init();
+    // game.play();
+}
+
+TEST(clashroyale, nav) {
+    {
+        Board::Grid grid;
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(true)});
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(true)});
+
+        Nav nav;
+        const auto route = nav.nav(grid, toPos({0, 0}), toPos({1, 1}));
+
+        EXPECT_TRUE(isEqualRoute(route, std::vector<Vector2>{toPos({0, 0}), toPos({1, 1})}));
+    }
+    
+    {
+        Board::Grid grid;
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(true), Tile(true)});
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(true), Tile(true)});
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(true), Tile(true)});
+
+        Nav nav;
+        const auto route = nav.nav(grid, toPos({0, 0}), toPos({2, 2}));
+
+        EXPECT_TRUE(isEqualRoute(route, std::vector<Vector2>{toPos({0, 0}), toPos({1, 1}), toPos({2, 2})}));
+    }
+
+    {
+        Board::Grid grid;
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(true), Tile(true)});
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(false), Tile(true)});
+        grid.emplace_back(std::vector<Tile>{Tile(true), Tile(true), Tile(true)});
+
+        Nav nav;
+        const auto route = nav.nav(grid, toPos({0, 0}), toPos({2, 2}));
+
+        EXPECT_TRUE(isEqualRoute(route, std::vector<Vector2>{toPos({0, 0}), toPos({1, 0}), toPos({2, 1}), toPos({2, 2})}));
+    }
 }

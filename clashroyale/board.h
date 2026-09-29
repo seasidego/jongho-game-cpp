@@ -13,7 +13,7 @@ const int BoardHight = 2;
 Vector2 toTile(const Vector2& pos);
 Vector2 toPos(const Vector2& tile);
 bool isEqual(const Vector2& v1, const Vector2& v2);
-
+bool isEqualRoute(const std::vector<Vector2>& v1, const std::vector<Vector2>& v2);
 
 class Tile {
 private:

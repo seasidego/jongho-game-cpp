@@ -121,46 +121,52 @@
 //  for loop to check tiles around that can go.
 //  for loop that tiles and recursive call nav(tiles)
 // }
-std::vector<Vector2> Nav::nav(const Board& board, const Vector2& currentPos, const Vector2& destPos) {
-    const auto& grid = board.getGrid();
-
+std::vector<Vector2> Nav::nav(const Board::Grid& grid, const Vector2& currentPos, const Vector2& destPos) {
     int count = 0;
 
-    const std::vector<Vector2>* minRoute = nullptr;
+    std::vector<Vector2> routeForPart;
     std::vector<Vector2> route;
-    std::vector<std::vector<Vector2>> allRoute;
 
     Vector2 currentTile = toTile(currentPos);
     Vector2 destTile = toTile(destPos);
-    route.emplace_back(currentTile);
 
-    navPart(board, currentTile, destTile, route, allRoute, 0);
-
-
-    for (const auto& r : allRoute) {
-        int minSize = INFINITY;
-        if (r.size() < minSize) {
-            minRoute = &r;
-        }
-    }
+    route = navPart(grid, currentTile, destTile, routeForPart, 0);
     
-    if (minRoute == nullptr) {
-        return {};
+    for (auto& r : route) {
+        std::cout << std::format("x: {} y: {}", r.x, r.y) << std::endl;
+        r = toPos(r);
     }
-    return *minRoute;
+
+    return route;
 }
 
-void Nav::navPart(const Board& board, const Vector2& currentTile, const Vector2& destTile, 
-    std::vector<Vector2> route, std::vector<std::vector<Vector2>>& allRoute, int depth) {
+std::vector<Vector2> Nav::navPart(const Board::Grid& grid, const Vector2& currentTile, const Vector2& destTile, 
+    std::vector<Vector2> route, int depth) {
 
-    const auto& grid = board.getGrid();
-    
+    std::vector<Vector2> needCheckTile;
+    route.emplace_back(currentTile);
+
+    if (isEqual(currentTile, destTile)) {
+        return route;
+    }
 
     for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
             Vector2 nextTile;
             nextTile.y = currentTile.y + i;
             nextTile.x = currentTile.x + j;
+
+            if (i == 0 && j == 0) {
+                continue;;
+            }
+
+            auto it = std::find_if(route.begin(), route.end(), [&nextTile](const auto& t) {
+                return t.x == nextTile.x && t.y == nextTile.y;
+            });
+
+            if (it != route.end()) {
+                continue;
+            }
 
             if (nextTile.y < 0 || nextTile.y >= grid.size()) {
                 continue;
@@ -175,30 +181,25 @@ void Nav::navPart(const Board& board, const Vector2& currentTile, const Vector2&
                 continue;
             }
 
-            auto it = std::find_if(route.begin(), route.end(), [&nextTile](const auto& t) {
-                return t.x == nextTile.x && t.y == nextTile.y;
-            });
-
-            if (it == route.end()) {
-                route.emplace_back(nextTile);
-
-                std::cout << "=====================" << std::endl;
-                std::cout << depth << " : " << currentTile.x << " : " << currentTile.y << std::endl;
-                for (const auto& r : route) {
-                    std::cout << r.x << " : " << r.y << std::endl;
-                }
-                std::cout << "----------------------" << std::endl;
-            } else {
-                continue;
-            }
-
-            if (isEqual(nextTile, destTile)) {
-                return ;
-            }
-
-            navPart(board, nextTile, destTile, route, allRoute, ++depth);
+            needCheckTile.emplace_back(nextTile);
         }
     }
 
-    allRoute.emplace_back(route);
+    std::vector<std::vector<Vector2>> allRoute;
+
+    for (const auto& n : needCheckTile) {
+        allRoute.emplace_back(navPart(grid, n, destTile, route, ++depth));
+    }
+
+    int min = 100000;
+    for (const auto& a : allRoute) {
+        if (a.size() < min) {
+            route = a;
+            min = a.size();
+        }
+    }
+
+    return route;
 }
+
+            

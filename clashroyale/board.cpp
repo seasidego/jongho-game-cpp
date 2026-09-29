@@ -25,6 +25,20 @@ bool isEqual(const Vector2& v1, const Vector2& v2) {
     return v1.x == v2.x && v1.y == v2.y;
 }
 
+bool isEqualRoute(const std::vector<Vector2>& v1, const std::vector<Vector2>& v2) {
+    if (v1.size() != v2.size()) {
+        return false;
+    }
+    int index = 0;
+    for (const auto& v : v1) {
+        if (!isEqual(v, v2[index])) {
+            return false;
+        }
+        ++index;
+    }
+    return true;
+}
+
 bool Tile::canCross() const {
     return canCross_;
 }

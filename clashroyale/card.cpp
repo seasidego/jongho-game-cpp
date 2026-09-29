@@ -75,7 +75,7 @@ const char* Unit::getShape() const {
 void Unit::move(const Board& board) {
     float tilePerSecond = speed_ / 60;
     if (route_.size() == 0) {
-        route_ = nav_.nav(board, pos_, Vector2{StartPos.x + TileSize * 1, StartPos.y + TileSize * 1});
+        route_ = nav_.nav(board.getGrid(), pos_, Vector2{StartPos.x + TileSize * 1, StartPos.y + TileSize * 1});
     }
     
     if (route_.size() > 0) {
