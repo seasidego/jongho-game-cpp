@@ -2,9 +2,17 @@
 #include <vector>
 #include <memory>
 // #include "card.h"
+#include "raylib.h"
+#include "raymath.h"
 
-const int BoardWidth = 18;
-const int BoardHight = 32;
+// const int BoardWidth = 18;
+// const int BoardHight = 32;
+const int BoardWidth = 2;
+const int BoardHight = 2;
+
+Vector2 toTile(const Vector2& pos);
+Vector2 toPos(const Vector2& tile);
+bool isEqual(const Vector2& v1, const Vector2& v2);
 
 
 class Tile {

@@ -2,9 +2,11 @@
 #include "game.h"
 #include "board.h"
 #include "raylib.h"
+#include <thread>
+#include <chrono>
 
 void UIMgr::init() {
-    InitWindow(600, 800, "Raylib Simple Test");
+    InitWindow(600, 800, "ClashRoyale");
     SetTargetFPS(60);
 }
 
@@ -65,15 +67,24 @@ const UIMgr& Game::getUIMgr() const {
 }
 
 void Game::play() {
+
+    bool isFirst = true;
     while (!WindowShouldClose() && run_) {
         BeginDrawing();
     
         ClearBackground(BLACK);
         
         uiMgr_.printBoard(board_, cardMgr_);
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
         moveUnit();
 
         EndDrawing();
+
+        if (isFirst) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+            isFirst = false;
+        }
+        break;
     }
     CloseWindow();
 }

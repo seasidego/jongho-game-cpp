@@ -57,6 +57,7 @@ private:
     float range_ = 0;
     float attackRange_ = 0;
     Nav nav_;
+    std::vector<Vector2> route_;
     
 public:
     Unit(Team team, int cost, float size, Vector2 pos, CardType type, AttackType attackType, int activeCoolDown,

@@ -74,16 +74,27 @@ const char* Unit::getShape() const {
 
 void Unit::move(const Board& board) {
     float tilePerSecond = speed_ / 60;
+    if (route_.size() == 0) {
+        route_ = nav_.nav(board, pos_, Vector2{StartPos.x + TileSize * 1, StartPos.y + TileSize * 1});
+    }
+    
+    if (route_.size() > 0) {
+        pos_.y = route_[0].y;
+        pos_.x = route_[0].x;
+        route_.erase(route_.begin());
+    }
+    
+
     // if (team_ == Team::Red) {
     //     pos_.y += tilePerSecond;
     // } else {
     //     pos_.y -= tilePerSecond;
     // }
-    auto route = nav_.nav(board, pos_, Vector2{StartPos.x + TileSize * 3, StartPos.y + TileSize * 3});
-    std::for_each(route.begin(), route.end(), [this](const auto& t) {
-        pos_.y = t.y * TileSize;
-        pos_.x = t.x * TileSize;
-    });
+
+    // std::for_each(route.begin(), route.end(), [this](const auto& t) {
+    //     pos_.y = t.y * TileSize;
+    //     pos_.x = t.x * TileSize;
+    // });
 }
 
 
