@@ -9,7 +9,12 @@ find_package(GTest REQUIRED)
 # 현재 디렉토리와 clashroyale 폴더 안의 모든 .cpp 파일을 자동으로 찾아서 SRC_FILES 변수에 저장
 file(GLOB_RECURSE SRC_FILES "*.cpp")
 
-file(GLOB_RECURSE SRC_FILES 
+# file(GLOB_RECURSE SRC_FILES 
+#     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
+#     CONFIGURE_DEPENDS
+#     "*.cpp"
+# )
+file(GLOB_RECURSE ALL_CPP_FILES 
     RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} 
     CONFIGURE_DEPENDS
     "*.cpp"

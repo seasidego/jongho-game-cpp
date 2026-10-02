@@ -132,10 +132,12 @@ std::vector<Vector2> Nav::nav(const Board::Grid& grid, const Vector2& currentPos
 
     route = navPart(grid, currentTile, destTile, routeForPart, 0);
     
+    std::cout << "result---------------------" << std::endl;
     for (auto& r : route) {
         std::cout << std::format("x: {} y: {}", r.x, r.y) << std::endl;
         r = toPos(r);
     }
+    std::cout << "---------------------" << std::endl;
 
     return route;
 }
@@ -146,7 +148,13 @@ std::vector<Vector2> Nav::navPart(const Board::Grid& grid, const Vector2& curren
     std::vector<Vector2> needCheckTile;
     route.emplace_back(currentTile);
 
+    // for (auto& r : route) {
+    //     std::cout << std::format("x: {} y: {}", r.x, r.y) << std::endl;
+    // }
+    // std::cout << "---------------------" << std::endl;
+
     if (isEqual(currentTile, destTile)) {
+        // std::cout << "2===================" << std::endl;
         return route;
     }
 
@@ -193,12 +201,16 @@ std::vector<Vector2> Nav::navPart(const Board::Grid& grid, const Vector2& curren
 
     int min = 100000;
     for (const auto& a : allRoute) {
+        if (a.back() != destTile) {
+            continue;
+        }
         if (a.size() < min) {
             route = a;
             min = a.size();
         }
     }
-
+    // std::cout << "3===================" << std::endl;
+    
     return route;
 }
 
